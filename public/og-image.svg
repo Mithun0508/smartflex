@@ -1,0 +1,28 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0A0F1A"/>
+      <stop offset="100%" stop-color="#0F1624"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)" />
+
+  <text x="50%" y="38%" text-anchor="middle" 
+        fill="#16B6B0" font-size="90" font-family="Poppins" font-weight="700">
+    SmartFlex
+  </text>
+
+  <text x="50%" y="52%" text-anchor="middle" 
+        fill="#D1D5DB" font-size="32" font-family="Inter" font-weight="300">
+    Compress Smarter. Share Faster.
+  </text>
+
+  <rect x="380" y="380" width="440" height="140" rx="24"
+        fill="#0B1B36" opacity="0.6" stroke="#16B6B0" stroke-width="2" />
+
+  <text x="50%" y="450" text-anchor="middle" 
+        fill="#ffffff" font-size="28" font-family="Inter" font-weight="400">
+    AI Video Compressor • Image Resizer • Social Tools
+  </text>
+</svg>

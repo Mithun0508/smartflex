@@ -1,0 +1,14 @@
+<svg width="220" height="60" viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- SF Icon -->
+  <path d="M32 18H18c-2 0-3 1-3 3s1 3 3 3h10c4 0 6 1 6 3s-2 3-6 3H14l-4 6h22c10 0 14-4 14-9s-4-9-14-9z"
+        fill="#16B6B0"/>
+  <path d="M14 30H8l-4 6h10l4-6z" fill="#ffffff"/>
+
+  <!-- SmartFlex Text -->
+  <text x="60" y="35" font-family="Poppins, sans-serif" font-size="28" font-weight="600" fill="#ffffff">
+    Smart
+  </text>
+  <text x="135" y="35" font-family="Poppins, sans-serif" font-size="28" font-weight="600" fill="#16B6B0">
+    Flex
+  </text>
+</svg>
