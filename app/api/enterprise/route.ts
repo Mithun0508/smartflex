@@ -1,34 +1,20 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+// 🚧 Enterprise flow disabled for initial launch
+// ✅ Prevents build-time execution
+// ✅ Keeps SaaS honest
+// ✅ Zero impact on Free / Video / Image features
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    // console.log("ENTERPRISE BODY 👉", body);
-
-    const { company, email, requirements } = body;
-
-    if (!company || !email || !requirements) {
-      return NextResponse.json(
-        { ok: false, error: "Missing fields", body },
-        { status: 400 }
-      );
-    }
-
-    await prisma.enterpriseLead.create({
-      data: { company, email, requirements },
-    });
-
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error("ENTERPRISE ERROR ❌", err);
-    return NextResponse.json(
-      { ok: false, error: "Server error" },
-      { status: 500 }
-    );
-  }
+export async function POST() {
+  return NextResponse.json(
+    {
+      ok: false,
+      message: "Enterprise plans are coming soon 🚀",
+    },
+    { status: 403 }
+  );
 }
