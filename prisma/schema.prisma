@@ -45,6 +45,14 @@ model EnterpriseLead {
   requirements String
   createdAt    DateTime @default(now())
 }
+model Image {
+  id           String   @id @default(cuid())
+  clerkUserId  String
+  publicId     String
+  format       String?
+  createdAt    DateTime @default(now())
+}
+
 
 
 
