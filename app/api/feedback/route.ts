@@ -4,16 +4,15 @@ import { prisma } from "@/lib/db";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// 👇 BUILD SAFETY (important)
 export async function GET() {
   return NextResponse.json({ ok: true });
 }
 
 export async function POST(req: Request) {
   try {
-    const { name, email, message } = await req.json();
+    const body = await req.json();
 
-    if (!email || !message) {
+    if (!body?.email || !body?.message) {
       return NextResponse.json(
         { ok: false, error: "Missing fields" },
         { status: 400 }
@@ -22,17 +21,17 @@ export async function POST(req: Request) {
 
     await prisma.feedback.create({
       data: {
-        name: name || null,
-        email,
-        message,
+        name: body.name ?? null,
+        email: body.email,
+        message: body.message,
       },
     });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("FEEDBACK API ERROR:", err);
+    console.error("FEEDBACK ERROR:", err);
     return NextResponse.json(
-      { ok: false, error: "Server error" },
+      { ok: false, error: "Internal error" },
       { status: 500 }
     );
   }
