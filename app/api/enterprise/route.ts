@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { getPrisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * ✅ Build-safe GET
- * Next.js needs this during "collect page data"
+ * 🛑 Build guard
+ * Next.js calls this during build
  */
 export async function GET() {
   return NextResponse.json({ ok: true });
@@ -23,21 +22,19 @@ export async function POST(req: Request) {
       );
     }
 
+    // ⚠️ Prisma must be INSIDE POST
+    const { getPrisma } = await import("@/lib/db");
     const prisma = getPrisma();
 
     await prisma.enterpriseLead.create({
-      data: {
-        company,
-        email,
-        requirements,
-      },
+      data: { company, email, requirements },
     });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("Enterprise API error:", err);
+    console.error("Enterprise error:", err);
     return NextResponse.json(
-      { ok: false, error: "Internal error" },
+      { ok: false, error: "Internal server error" },
       { status: 500 }
     );
   }

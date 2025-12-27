@@ -1,12 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 
-let prisma: PrismaClient | null = null;
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined;
+}
 
 export function getPrisma() {
-  if (!prisma) {
-    prisma = new PrismaClient({
-      log: ["error"],
-    });
+  if (!global.prisma) {
+    global.prisma = new PrismaClient();
   }
-  return prisma;
+  return global.prisma;
 }
