@@ -1,26 +1,38 @@
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 import { NextResponse } from "next/server";
 import { getPrisma } from "@/lib/db";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+/**
+ * ❌ BUILD-TIME SAFETY
+ * GET handler required so Next.js doesn't try to pre-evaluate the route
+ */
+export async function GET() {
+  return NextResponse.json({ ok: true });
+}
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { company, email, requirements } = body;
+    const { company, email, requirements } = await req.json();
 
-    if (!email || !company) {
+    if (!company || !email) {
       return NextResponse.json({ ok: false }, { status: 400 });
     }
 
-    await getPrisma().enterpriseLead.create({
-      data: { company, email, requirements },
+    const prisma = getPrisma();
+
+    await prisma.enterpriseLead.create({
+      data: {
+        company,
+        email,
+        requirements,
+      },
     });
 
     return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error("Enterprise API error:", error);
+  } catch (err) {
+    console.error("Enterprise API error:", err);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 }
