@@ -1,12 +1,17 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isProtectedRoute = createRouteMatcher([
-  "/social-share(.*)",
+  "/api/video(.*)",
   "/api/video-upload(.*)",
+  "/api/video-compress(.*)",
+  "/api/image-upload(.*)",
+  "/api/subscription(.*)",
+  "/api/enterprise(.*)",
+  "/social-share(.*)",
 ]);
 
+
 export default clerkMiddleware(async (auth, req) => {
-  // Agar route protected hai, aur user login nahi hai to redirect kare
   if (isProtectedRoute(req)) {
     await auth.protect();
   }
@@ -14,8 +19,7 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // Next.js ke internal files skip karne ke liye pattern
-    "/((?!.+\\.[\\w]+$|_next).*)",
-    "/",
+    "/((?!_next|favicon.ico).*)",
+    "/api/(.*)",
   ],
 };
