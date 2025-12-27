@@ -5,8 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * ❌ BUILD-TIME SAFETY
- * GET handler required so Next.js doesn't try to pre-evaluate the route
+ * REQUIRED for build safety
  */
 export async function GET() {
   return NextResponse.json({ ok: true });
