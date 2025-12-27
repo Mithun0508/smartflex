@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { getPrisma } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false }, { status: 400 });
     }
 
-    await prisma.feedback.create({
+    await getPrisma().feedback.create({
       data: { name, email, message },
     });
 

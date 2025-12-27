@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { getPrisma } from "@/lib/db";
 import cloudinary from "@/lib/cloudinary";
 import { spawn } from "child_process";
 import { writeFile, readFile, unlink, mkdtemp } from "fs/promises";

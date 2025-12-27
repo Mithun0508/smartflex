@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/db";
+import { getPrisma } from "@/lib/db";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     });
 
     // 6️⃣ Save to DB ✅ (YAHI place sahi hai)
-    await prisma.image.create({
+    await getPrisma().image.create({
       data: {
         clerkUserId: userId,
         publicId: uploadRes.public_id,

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { getPrisma } from "@/lib/db";
 
 function formatBytes(bytes: number | null): string {
   if (!bytes) return "—";
@@ -14,7 +14,7 @@ export default async function VideoPage(props: { params: Promise<{ id: string }>
     return <p className="p-6 text-red-400">Invalid video ID</p>;
   }
 
-  const video = await prisma.video.findUnique({
+  const video = await getPrisma().video.findUnique({
     where: { id },
   });
 
