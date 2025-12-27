@@ -5,11 +5,12 @@ import { prisma } from "@/lib/db";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+export const maxDuration = 60;
+export const maxBodySize = "20mb";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
-export const maxBodySize = "20mb";
+export const revalidate = 0;
 
 export async function POST(req: NextRequest) {
   try {
