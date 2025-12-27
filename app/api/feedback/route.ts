@@ -1,26 +1,38 @@
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 import { NextResponse } from "next/server";
 import { getPrisma } from "@/lib/db";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+/**
+ * 🔑 Required for Next.js build
+ * Next build tries to pre-evaluate routes
+ */
+export async function GET() {
+  return NextResponse.json({ ok: true });
+}
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { name, email, message } = body;
+    const { name, email, message } = await req.json();
 
     if (!email || !message) {
       return NextResponse.json({ ok: false }, { status: 400 });
     }
 
-    await getPrisma().feedback.create({
-      data: { name, email, message },
+    const prisma = getPrisma();
+
+    await prisma.feedback.create({
+      data: {
+        name,
+        email,
+        message,
+      },
     });
 
     return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error("Feedback API error:", error);
+  } catch (err) {
+    console.error("Feedback API error:", err);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 }
