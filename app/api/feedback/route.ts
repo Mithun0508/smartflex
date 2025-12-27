@@ -4,6 +4,11 @@ import { prisma } from "@/lib/db";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// 👇 BUILD SAFETY (important)
+export async function GET() {
+  return NextResponse.json({ ok: true });
+}
+
 export async function POST(req: Request) {
   try {
     const { name, email, message } = await req.json();
