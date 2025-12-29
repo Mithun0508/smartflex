@@ -35,7 +35,7 @@ export default function VideoUploadPage() {
     setCompressedSize(null);
   };
 
-  // ⭐ BACKEND VIDEO COMPRESSION — FINAL VERSION
+  // ✅ CLOUDINARY-ONLY 480p FLOW (VERCEL SAFE)
   const processVideo = async () => {
     const MAX_VIDEO_SIZE = 200 * 1024 * 1024; // 200MB
 
@@ -45,14 +45,13 @@ export default function VideoUploadPage() {
       return;
     }
 
-    const selectedFile: File = file; // ✅ TS-safe
-
-    if (selectedFile.size > MAX_VIDEO_SIZE) {
-      setError("Free plan allows max 200MB video");
+    if (file.size > MAX_VIDEO_SIZE) {
+      setError("Free plan allows max 200MB video.");
       setStatus("error");
       return;
     }
 
+    // 🔒 Pro locks (UI unchanged)
     if (quality === "720p") {
       setError("720p is a Pro feature (Coming Soon 🚀)");
       setStatus("error");
@@ -70,29 +69,37 @@ export default function VideoUploadPage() {
 
     try {
       const fd = new FormData();
-      fd.append("file", selectedFile); // ✅ no null
-      fd.append("quality", quality);
+      fd.append("file", file);
+      fd.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UNSIGNED_PRESET!);
+      fd.append("folder", "smartflex/videos");
 
-      const res = await fetch("/api/video-upload", {
-        method: "POST",
-        body: fd,
-      });
+      // 480p transform (Cloudinary)
+      // q_auto:eco = best compression for MVP
+      // w_854 ≈ 480p (maintains aspect ratio)
+      fd.append("transformation", "q_auto:eco,w_854,f_auto");
+
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`,
+        {
+          method: "POST",
+          body: fd,
+        }
+      );
 
       const data = await res.json();
 
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || "Compression failed");
+      if (!res.ok || !data.secure_url) {
+        throw new Error(data?.error?.message || "Upload failed");
       }
 
-      setOutputUrl(data.url);
-      setCompressedSize(data.size);
+      setOutputUrl(data.secure_url);
+      setCompressedSize(data.bytes);
       setStatus("done");
     } catch (err: any) {
       setError(err.message || "Unexpected error");
       setStatus("error");
     }
   };
-
 
   const downloadOutput = () => {
     if (!outputUrl) return;
@@ -113,7 +120,6 @@ export default function VideoUploadPage() {
     setCompressedSize(null);
   };
 
-  // derived values
   const originalMB = file ? bytesToMB(file.size) : null;
   const compressedMB = compressedSize ? bytesToMB(compressedSize) : null;
 
@@ -183,7 +189,6 @@ export default function VideoUploadPage() {
                   <option value="480p">480p (Free)</option>
                   <option value="720p">720p (Pro - Coming Soon)</option>
                   <option value="1080p">1080p (Pro – Coming Soon)</option>
-
                 </select>
               </div>
 
@@ -227,10 +232,9 @@ export default function VideoUploadPage() {
               <div className="animate-spin h-6 w-6 border-2 border-t-transparent border-gray-300 rounded-full"></div>
               <p className="text-gray-400 text-sm">Uploading & processing…</p>
               <p className="text-yellow-400 text-xs mt-2">
-                ⚠️ Don’t leave this page during processing. Leaving the page may cancel the process.
+                ⚠️ Don’t leave this page during processing.
               </p>
             </div>
-
           )}
 
           {status === "done" && outputUrl && (
