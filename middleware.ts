@@ -1,15 +1,14 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
+/**
+ * 🔐 Only routes that REALLY need login
+ */
 const isProtectedRoute = createRouteMatcher([
-  "/api/video(.*)",
-  "/api/video-upload(.*)",
-  "/api/video-compress(.*)",
-  "/api/image-upload(.*)",
+  "/dashboard(.*)",
+  "/account(.*)",
+  "/api/credits(.*)",
   "/api/subscription(.*)",
-  "/api/enterprise(.*)",
-  "/social-share(.*)",
 ]);
-
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
@@ -20,6 +19,5 @@ export default clerkMiddleware(async (auth, req) => {
 export const config = {
   matcher: [
     "/((?!_next|favicon.ico).*)",
-    "/api/(.*)",
   ],
 };

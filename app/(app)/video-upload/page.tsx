@@ -35,7 +35,6 @@ export default function VideoUploadPage() {
     setCompressedSize(null);
   };
 
-  // ✅ CLOUDINARY-ONLY 480p FLOW (VERCEL SAFE)
   const processVideo = async () => {
     const MAX_VIDEO_SIZE = 200 * 1024 * 1024; // 200MB
 
@@ -70,36 +69,28 @@ export default function VideoUploadPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UNSIGNED_PRESET!);
-      fd.append("folder", "smartflex/videos");
+      fd.append("target", quality); // backend will use this
 
-      // 480p transform (Cloudinary)
-      // q_auto:eco = best compression for MVP
-      // w_854 ≈ 480p (maintains aspect ratio)
-      fd.append("transformation", "q_auto:eco,w_854,f_auto");
-
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`,
-        {
-          method: "POST",
-          body: fd,
-        }
-      );
+      const res = await fetch("/api/video-upload", {
+        method: "POST",
+        body: fd,
+      });
 
       const data = await res.json();
 
-      if (!res.ok || !data.secure_url) {
-        throw new Error(data?.error?.message || "Upload failed");
+      if (!res.ok || !data.compressed?.url) {
+        throw new Error(data?.error || "Compression failed");
       }
 
-      setOutputUrl(data.secure_url);
-      setCompressedSize(data.bytes);
+      setOutputUrl(data.compressed.url);
+      setCompressedSize(data.compressed.bytes || null);
       setStatus("done");
     } catch (err: any) {
       setError(err.message || "Unexpected error");
       setStatus("error");
     }
   };
+
 
   const downloadOutput = () => {
     if (!outputUrl) return;
