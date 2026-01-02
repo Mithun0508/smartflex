@@ -1,7 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 /**
- * 🔐 Only routes that REALLY need login
+ * 🔐 Only protect routes that need login
  */
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
@@ -18,6 +18,10 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    "/((?!_next|favicon.ico).*)",
+    // ✅ Only run middleware on protected routes
+    "/dashboard(.*)",
+    "/account(.*)",
+    "/api/credits(.*)",
+    "/api/subscription(.*)",
   ],
 };
