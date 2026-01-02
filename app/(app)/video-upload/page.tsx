@@ -50,7 +50,7 @@ export default function VideoUploadPage() {
       return;
     }
 
-    // 🔒 Pro locks (UI unchanged)
+    // 🔒 Pro locks
     if (quality === "720p") {
       setError("720p is a Pro feature (Coming Soon 🚀)");
       setStatus("error");
@@ -69,14 +69,20 @@ export default function VideoUploadPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("target", quality); // backend will use this
+      fd.append("target", quality);
 
       const res = await fetch("/api/video-upload", {
         method: "POST",
         body: fd,
       });
 
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text();
+        throw new Error(text || "Unexpected error");
+      }
 
       if (!res.ok || !data.compressed?.url) {
         throw new Error(data?.error || "Compression failed");
@@ -90,6 +96,7 @@ export default function VideoUploadPage() {
       setStatus("error");
     }
   };
+
 
 
   const downloadOutput = () => {

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 
 export const runtime = "nodejs";
-export const maxDuration = 60; // Vercel ko hint: 60s tak run karne do
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +13,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "File missing" }, { status: 400 });
     }
 
-    // ✅ Guard for large files
     const MAX_SIZE = 180 * 1024 * 1024; // 180MB safe cap
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
@@ -25,7 +23,6 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // ✅ Upload original video
     const uploadResult = await new Promise<any>((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
@@ -38,12 +35,9 @@ export async function POST(req: NextRequest) {
         }
       ).end(buffer);
     });
-    console.log("Upload Result:", uploadResult);
 
-    // ✅ Scale based on target
     const scale = target === "1080p" ? 1080 : target === "720p" ? 720 : 480;
 
-    // ✅ Apply compression
     const eagerResult = await cloudinary.uploader.explicit(uploadResult.public_id, {
       type: "upload",
       resource_type: "video",
@@ -52,15 +46,14 @@ export async function POST(req: NextRequest) {
           transformation: [
             { width: scale, crop: "scale" },
             { video_codec: "h264" },
-            { bitrate: "800k" },
-            { quality: "auto:good" },
+            { bitrate: "800k" }, // balanced quality
+            { quality: "auto:good" }, // better balance
             { fetch_format: "mp4" },
           ],
         },
       ],
       eager_async: false,
     });
-    console.log("Eager Result:", eagerResult);
 
     const compressed = eagerResult?.eager?.[0];
 
@@ -78,6 +71,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (e: any) {
     console.error("[video-upload] error:", e);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    return NextResponse.json({ error: e.message || "Upload failed" }, { status: 500 });
   }
 }
