@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
-import { auth } from "@clerk/nextjs/server";
 import { getPrisma } from "@/lib/db";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+
 export const maxDuration = 60;
 export const maxBodySize = "20mb";
 
@@ -14,13 +14,7 @@ export const revalidate = 0;
 
 export async function POST(req: NextRequest) {
   try {
-    // 1️⃣ Clerk user
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    // 2️⃣ FormData
+    // 1️⃣ FormData
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     if (!file) {
@@ -32,51 +26,49 @@ export async function POST(req: NextRequest) {
 
     // 🔒 IMAGE FREE PLAN LIMIT
     const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
-
     if (file.size > MAX_IMAGE_SIZE) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: "Free plan allows max 10MB image only",
-        },
+        { ok: false, error: "Free plan allows max 10MB image only" },
         { status: 413 }
       );
     }
 
-    if (!file || file.size === 0) {
+    if (file.size === 0) {
       return NextResponse.json(
         { ok: false, error: "Invalid file" },
         { status: 400 }
       );
     }
 
-    // 3️⃣ Buffer
+    // 2️⃣ Buffer
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // 4️⃣ Temp file
+    // 3️⃣ Temp file
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "smartflex-"));
     const filePath = path.join(tempDir, file.name);
     await fs.writeFile(filePath, buffer);
 
-    // 5️⃣ Cloudinary upload
+    // 4️⃣ Cloudinary upload
     const uploadRes = await cloudinary.uploader.upload(filePath, {
       resource_type: "image",
       folder: "smartflex/images",
     });
 
-    // 6️⃣ Save to DB ✅ (YAHI place sahi hai)
+    // 5️⃣ Save to DB (optional, can skip if testing)
+    // 5️⃣ Save to DB (dummy user for free mode)
     await getPrisma().image.create({
       data: {
-        clerkUserId: userId,
+        clerkUserId: "guest",   // ✅ add this line
         publicId: uploadRes.public_id,
         format: "social-adjust",
       },
     });
 
-    // 7️⃣ Cleanup
+
+    // 6️⃣ Cleanup
     await fs.unlink(filePath);
 
-    // 8️⃣ Response
+    // 7️⃣ Response
     return NextResponse.json({
       ok: true,
       publicId: uploadRes.public_id,
@@ -84,7 +76,6 @@ export async function POST(req: NextRequest) {
       width: uploadRes.width,
       height: uploadRes.height,
     });
-
   } catch (err: any) {
     console.error("Image upload error:", err);
     return NextResponse.json(
