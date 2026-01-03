@@ -7,6 +7,10 @@ import { useState } from "react";
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const canUseClerk =
+    typeof window !== "undefined" &&
+    !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 
   const links = [
     { name: "Home", href: "/" },
@@ -52,63 +56,63 @@ export default function Navbar() {
           ))}
 
           {/* USER LOGGED IN */}
-          <SignedIn>
-            <div className="w-8 h-8 flex items-center justify-center">
-              <UserButton
-                showName={false}
-                afterSignOutUrl="/"
-                appearance={{
-                  variables: {
-                    colorPrimary: "#16B6B0",
-                    colorBackground: "#0F1624",
-                    colorText: "#E5E7EB",          // 👈 main text
-                    colorTextSecondary: "#9CA3AF", // 👈 email + menu text FIX
-                    colorInputBackground: "#05070D",
-                    colorInputText: "#E5E7EB",
-                    borderRadius: "14px",
-                  },
-                  elements: {
-                    avatarBox: "w-8 h-8 rounded-full border border-[#1b2335]",
 
-                    userButtonPopoverCard:
-                      "bg-[#0F1624] border border-[#1b2335] shadow-xl",
+          {canUseClerk && (
+            <>
+              {/* USER LOGGED IN */}
+              <SignedIn>
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <UserButton
+                    showName={false}
+                    afterSignOutUrl="/"
+                    appearance={{
+                      variables: {
+                        colorPrimary: "#16B6B0",
+                        colorBackground: "#0F1624",
+                        colorText: "#E5E7EB",
+                        colorTextSecondary: "#9CA3AF",
+                        colorInputBackground: "#05070D",
+                        colorInputText: "#E5E7EB",
+                        borderRadius: "14px",
+                      },
+                      elements: {
+                        avatarBox:
+                          "w-8 h-8 rounded-full border border-[#1b2335]",
+                        userButtonPopoverCard:
+                          "bg-[#0F1624] border border-[#1b2335] shadow-xl",
+                        userButtonPopoverFooter: "hidden",
+                        userButtonPopoverActionButton:
+                          "text-gray-300 hover:text-white",
+                        userButtonPopoverActionButtonText:
+                          "text-gray-300",
+                        userButtonPopoverActionButtonIcon:
+                          "text-gray-400",
+                        userButtonPopoverProfileDetails:
+                          "text-gray-300",
+                      },
+                    }}
+                  />
+                </div>
+              </SignedIn>
 
-                    userButtonPopoverFooter: "hidden",
+              {/* USER LOGGED OUT */}
+              <SignedOut>
+                <a
+                  href="/sign-in"
+                  className="text-gray-300 hover:text-[#16B6B0] font-poppins text-[15px]"
+                >
+                  Sign In
+                </a>
+                <a
+                  href="/sign-up"
+                  className="px-4 py-2 bg-[#16B6B0] text-black rounded-lg font-semibold font-poppins text-[15px] hover:opacity-90"
+                >
+                  Sign Up
+                </a>
+              </SignedOut>
+            </>
+          )}
 
-                    userButtonPopoverActionButton:
-                      "text-gray-300 hover:text-white",
-
-                    userButtonPopoverActionButtonText:
-                      "text-gray-300",
-
-                    userButtonPopoverActionButtonIcon:
-                      "text-gray-400",
-
-                    userButtonPopoverProfileDetails:
-                      "text-gray-300",   // 👈 EMAIL AREA FIX
-                  },
-                }}
-              />
-
-
-            </div>
-          </SignedIn>
-
-          {/* USER LOGGED OUT */}
-          <SignedOut>
-            <a
-              href="/sign-in"
-              className="text-gray-300 hover:text-[#16B6B0] font-poppins text-[15px]"
-            >
-              Sign In
-            </a>
-            <a
-              href="/sign-up"
-              className="px-4 py-2 bg-[#16B6B0] text-black rounded-lg font-semibold font-poppins text-[15px] hover:opacity-90"
-            >
-              Sign Up
-            </a>
-          </SignedOut>
         </div>
 
         {/* MOBILE BUTTON */}
@@ -144,69 +148,68 @@ export default function Navbar() {
           ))}
 
           {/* Signed In (Mobile) */}
-          <SignedIn>
-            <div className="mt-4 border-t border-[#1b2335] pt-4">
-              <div className="w-10 h-10">
-                <UserButton
-                  showName={false}
-                  afterSignOutUrl="/"
-                  appearance={{
-                    variables: {
-                      colorPrimary: "#16B6B0",
-                      colorBackground: "#0F1624",
-                      colorText: "#E5E7EB",          // 👈 main text
-                      colorTextSecondary: "#9CA3AF", // 👈 email + menu text FIX
-                      colorInputBackground: "#05070D",
-                      colorInputText: "#E5E7EB",
-                      borderRadius: "14px",
-                    },
-                    elements: {
-                      avatarBox: "w-10 h-10 rounded-full border border-[#1b2335]",
+          {canUseClerk && (
+            <>
+              {/* Signed In (Mobile) */}
+              <SignedIn>
+                <div className="mt-4 border-t border-[#1b2335] pt-4">
+                  <div className="w-10 h-10">
+                    <UserButton
+                      showName={false}
+                      afterSignOutUrl="/"
+                      appearance={{
+                        variables: {
+                          colorPrimary: "#16B6B0",
+                          colorBackground: "#0F1624",
+                          colorText: "#E5E7EB",
+                          colorTextSecondary: "#9CA3AF",
+                          colorInputBackground: "#05070D",
+                          colorInputText: "#E5E7EB",
+                          borderRadius: "14px",
+                        },
+                        elements: {
+                          avatarBox:
+                            "w-10 h-10 rounded-full border border-[#1b2335]",
+                          userButtonPopoverCard:
+                            "bg-[#0F1624] border border-[#1b2335] shadow-xl",
+                          userButtonPopoverFooter: "hidden",
+                          userButtonPopoverActionButton:
+                            "text-gray-300 hover:text-white",
+                          userButtonPopoverActionButtonText:
+                            "text-gray-300",
+                          userButtonPopoverActionButtonIcon:
+                            "text-gray-400",
+                          userButtonPopoverProfileDetails:
+                            "text-gray-300",
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+              </SignedIn>
 
-                      userButtonPopoverCard:
-                        "bg-[#0F1624] border border-[#1b2335] shadow-xl",
+              {/* Signed Out (Mobile) */}
+              <SignedOut>
+                <div className="mt-4 border-t border-[#1b2335] pt-4 flex flex-col gap-3">
+                  <a
+                    href="/sign-in"
+                    className="text-gray-300 hover:text-[#16B6B0]"
+                    onClick={() => setOpen(false)}
+                  >
+                    Sign In
+                  </a>
+                  <a
+                    href="/sign-up"
+                    className="py-2 bg-[#16B6B0] text-black rounded-lg font-semibold text-center"
+                    onClick={() => setOpen(false)}
+                  >
+                    Sign Up
+                  </a>
+                </div>
+              </SignedOut>
+            </>
+          )}
 
-                      userButtonPopoverFooter: "hidden",
-
-                      userButtonPopoverActionButton:
-                        "text-gray-300 hover:text-white",
-
-                      userButtonPopoverActionButtonText:
-                        "text-gray-300",
-
-                      userButtonPopoverActionButtonIcon:
-                        "text-gray-400",
-
-                      userButtonPopoverProfileDetails:
-                        "text-gray-300",   // 👈 EMAIL AREA FIX
-                    },
-                  }}
-                />
-
-
-              </div>
-            </div>
-          </SignedIn>
-
-          {/* Signed Out (Mobile) */}
-          <SignedOut>
-            <div className="mt-4 border-t border-[#1b2335] pt-4 flex flex-col gap-3">
-              <a
-                href="/sign-in"
-                className="text-gray-300 hover:text-[#16B6B0]"
-                onClick={() => setOpen(false)}
-              >
-                Sign In
-              </a>
-              <a
-                href="/sign-up"
-                className="py-2 bg-[#16B6B0] text-black rounded-lg font-semibold text-center"
-                onClick={() => setOpen(false)}
-              >
-                Sign Up
-              </a>
-            </div>
-          </SignedOut>
         </div>
       )}
     </header>
