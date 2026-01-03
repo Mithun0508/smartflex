@@ -1,9 +1,8 @@
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import Providers from "./providers";
 import { Analytics } from "@vercel/analytics/react";
-
 
 export const metadata = {
   metadataBase: new URL("https://usesmartflex.com"),
@@ -24,7 +23,8 @@ export const metadata = {
 
   openGraph: {
     title: "SmartFlex – AI Video Compressor & Image Resizer",
-    description: "Compress videos, resize images, and optimize media instantly using AI.",
+    description:
+      "Compress videos, resize images, and optimize media instantly using AI.",
     url: "https://usesmartflex.com",
     siteName: "SmartFlex",
     type: "website",
@@ -41,7 +41,8 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "SmartFlex – AI Video Compressor & Image Tools",
-    description: "Fast video compression, social media image resizing, and more.",
+    description:
+      "Fast video compression, social media image resizing, and more.",
     creator: "@smartflex",
     images: ["/og-image.png"],
   },
@@ -51,55 +52,34 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <ClerkProvider
-      appearance={{
-        variables: {
-          colorPrimary: "#16B6B0",
-          colorBackground: "#0A0F1A",
-          colorText: "#FFFFFF",
-          colorTextSecondary: "#A1A1AA",
-        },
-        elements: {
-          socialButtonsBlockButton: {
-            backgroundColor: "#0F1624",
-            color: "#FFFFFF",
-            border: "1px solid #1b2335",
-          },
-          socialButtonsBlockButtonText: {
-            color: "#FFFFFF",
-          },
-          socialButtonsBlockButtonArrow: {
-            color: "#FFFFFF",
-          },
-        },
-      }}
-    >
+    <html lang="en">
 
-      <html lang="en">
+      {/* ---- Clerk Blink Fix ---- */}
+      <head>
+        <link rel="preconnect" href="https://api.clerk.com" />
+        <link rel="preconnect" href="https://img.clerk.com" />
+      </head>
 
-        {/* ---- Clerk Blink Fix ---- */}
-        <head>
-          <link rel="preconnect" href="https://api.clerk.com" />
-          <link rel="preconnect" href="https://img.clerk.com" />
-        </head>
-
-        <body className="min-h-screen flex flex-col bg-[#070B14] text-white font-inter">
-
+      <body className="min-h-screen flex flex-col bg-[#070B14] text-white font-inter">
+        <Providers>
           {/* Navbar */}
           <Navbar />
 
           {/* Page Content */}
-          <main className="flex-1 pt-24">
-            {children}
-          </main>
+          <main className="flex-1 pt-24">{children}</main>
 
           {/* Footer */}
           <Footer />
+        </Providers>
 
-        </body>
-      </html>
-    </ClerkProvider>
+        <Analytics />
+      </body>
+    </html>
   );
 }
