@@ -1,3 +1,5 @@
+"use client";
+
 export default function AboutPage() {
   return (
     <section className="py-20 bg-[#070B14] min-h-screen">
