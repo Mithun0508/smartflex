@@ -1,8 +1,9 @@
 import "./globals.css";
-import Navbar from "@/app/components/Navbar";
+import NavbarClient from "@/app/components/NavbarClient";
 import Footer from "@/app/components/Footer";
 import Providers from "./providers";
 import { Analytics } from "@vercel/analytics/react";
+
 
 export const metadata = {
   metadataBase: new URL("https://usesmartflex.com"),
@@ -69,7 +70,8 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col bg-[#070B14] text-white font-inter">
         <Providers>
           {/* Navbar */}
-          <Navbar />
+          <NavbarClient />
+
 
           {/* Page Content */}
           <main className="flex-1 pt-24">{children}</main>
