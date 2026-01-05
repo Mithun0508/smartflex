@@ -2,7 +2,6 @@ import "./globals.css";
 import NavbarClient from "@/app/components/NavbarClient";
 import Footer from "@/app/components/Footer";
 import Providers from "./providers";
-import { Analytics } from "@vercel/analytics/react";
 export const dynamic = "force-dynamic";
 
 
@@ -82,7 +81,7 @@ export default function RootLayout({
           <Footer />
         </Providers>
 
-        <Analytics />
+        
       </body>
     </html>
   );
