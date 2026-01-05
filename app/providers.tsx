@@ -9,6 +9,10 @@ export default function Providers({
 }) {
   return (
     <ClerkProvider
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      afterSignInUrl="/dashboard"
+      afterSignUpUrl="/dashboard"
       appearance={{
         variables: {
           colorPrimary: "#16B6B0",
