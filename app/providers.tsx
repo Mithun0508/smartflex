@@ -2,19 +2,13 @@
 
 import { ClerkProvider } from "@clerk/nextjs";
 
-export default function Providers({ children }: { children: React.ReactNode }) {
-  const publishableKey =
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-    
-
-  // 🔐 Build-time safety
-  if (!publishableKey) {
-    return <>{children}</>;
-  }
-
+export default function Providers({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <ClerkProvider
-      publishableKey={publishableKey}
       appearance={{
         variables: {
           colorPrimary: "#16B6B0",
