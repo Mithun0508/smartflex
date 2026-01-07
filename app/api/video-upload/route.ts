@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import cloudinary from "@/lib/cloudinary";
+import { getCloudinary } from "@/lib/cloudinary";
+import type {
+  UploadApiErrorResponse,
+  UploadApiResponse,
+} from "cloudinary";
 
 export const runtime = "nodejs";
 
@@ -13,23 +17,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "File missing" }, { status: 400 });
     }
 
-    const MAX_INPUT_SIZE = 200 * 1024 * 1024;
-    if (file.size > MAX_INPUT_SIZE) {
-      return NextResponse.json(
-        { error: "File too large (max 200MB)" },
-        { status: 413 }
-      );
-    }
-
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // 🎯 Resolution mapping
     const height =
       target === "1080p" ? 1080 :
       target === "720p"  ? 720  :
       480;
 
-    const result = await new Promise<any>((resolve, reject) => {
+    const cloudinary = getCloudinary();
+
+    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
           resource_type: "video",
@@ -39,16 +36,20 @@ export async function POST(req: NextRequest) {
               height,
               crop: "scale",
               video_codec: "h264",
-              bit_rate: height === 480 ? "1000k" : height === 720 ? "2500k" : "4500k",
               audio_codec: "aac",
-              audio_frequency: 44100,
             },
           ],
-          eager_async: true, // 🔥 Cloudinary handles async processing
+          eager_async: true,
         },
-        (err, uploadResult) => {
-          if (err) reject(err);
-          else resolve(uploadResult);
+        (
+          err: UploadApiErrorResponse | undefined,
+          uploadResult: UploadApiResponse | undefined
+        ) => {
+          if (err || !uploadResult) {
+            reject(err ?? new Error("Upload failed"));
+          } else {
+            resolve(uploadResult);
+          }
         }
       ).end(buffer);
     });
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
       target,
       publicId: result.public_id,
       originalUrl: result.secure_url,
-      status: "processing", // transformation runs async
+      status: "processing",
     });
 
   } catch (e: any) {
