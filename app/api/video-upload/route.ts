@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
       target === "720p"  ? 720  :
       480;
 
+    // ✅ runtime-only
     const cloudinary = getCloudinary();
 
     const result = await new Promise<UploadApiResponse>((resolve, reject) => {
@@ -61,7 +62,6 @@ export async function POST(req: NextRequest) {
       originalUrl: result.secure_url,
       status: "processing",
     });
-
   } catch (e: any) {
     console.error("[video-upload]", e);
     return NextResponse.json(
