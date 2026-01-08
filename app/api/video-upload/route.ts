@@ -6,6 +6,7 @@ import type {
 } from "cloudinary";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +18,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "File missing" }, { status: 400 });
     }
 
+    // 🔒 FREE PLAN VIDEO LIMIT (VERY IMPORTANT)
+    const MAX_VIDEO_SIZE = 40 * 1024 * 1024; // 40 MB (Cloudinary free safe)
+    if (file.size > MAX_VIDEO_SIZE) {
+      return NextResponse.json(
+        { error: "Free plan allows max 40MB video only" },
+        { status: 413 }
+      );
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const height =
@@ -24,7 +34,6 @@ export async function POST(req: NextRequest) {
       target === "720p"  ? 720  :
       480;
 
-    // ✅ runtime-only
     const cloudinary = getCloudinary();
 
     const result = await new Promise<UploadApiResponse>((resolve, reject) => {
@@ -38,6 +47,7 @@ export async function POST(req: NextRequest) {
               crop: "scale",
               video_codec: "h264",
               audio_codec: "aac",
+              quality: "auto",
             },
           ],
           eager_async: true,
@@ -47,7 +57,8 @@ export async function POST(req: NextRequest) {
           uploadResult: UploadApiResponse | undefined
         ) => {
           if (err || !uploadResult) {
-            reject(err ?? new Error("Upload failed"));
+            console.error("CLOUDINARY VIDEO ERROR:", err);
+            reject(err ?? new Error("Video upload failed"));
           } else {
             resolve(uploadResult);
           }
@@ -62,6 +73,7 @@ export async function POST(req: NextRequest) {
       originalUrl: result.secure_url,
       status: "processing",
     });
+
   } catch (e: any) {
     console.error("[video-upload]", e);
     return NextResponse.json(
