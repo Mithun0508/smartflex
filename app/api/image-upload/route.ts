@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import cloudinary from "@/lib/cloudinary";
+import { getCloudinary } from "@/lib/cloudinary";
 import { getPrisma } from "@/lib/db";
-import fs from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-
-export const maxDuration = 60;
-export const maxBodySize = "20mb";
+import type {
+  UploadApiErrorResponse,
+  UploadApiResponse,
+} from "cloudinary";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +15,7 @@ export async function POST(req: NextRequest) {
     // 1️⃣ FormData
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
+
     if (!file) {
       return NextResponse.json(
         { ok: false, error: "File missing" },
@@ -24,8 +23,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 🔒 IMAGE FREE PLAN LIMIT
-    const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
+    // 🔒 Free plan image limit (10MB)
+    const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
     if (file.size > MAX_IMAGE_SIZE) {
       return NextResponse.json(
         { ok: false, error: "Free plan allows max 10MB image only" },
@@ -40,35 +39,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2️⃣ Buffer
+    // 2️⃣ Buffer (no temp files)
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // 3️⃣ Temp file
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "smartflex-"));
-    const filePath = path.join(tempDir, file.name);
-    await fs.writeFile(filePath, buffer);
+    // 3️⃣ Cloudinary (runtime-only)
+    const cloudinary = getCloudinary();
 
-    // 4️⃣ Cloudinary upload
-    const uploadRes = await cloudinary.uploader.upload(filePath, {
-      resource_type: "image",
-      folder: "smartflex/images",
+    const uploadRes = await new Promise<UploadApiResponse>((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: "image",
+          folder: "smartflex/images",
+          transformation: [
+            { quality: "auto", fetch_format: "auto" },
+          ],
+        },
+        (
+          err: UploadApiErrorResponse | undefined,
+          result: UploadApiResponse | undefined
+        ) => {
+          if (err || !result) {
+            reject(err ?? new Error("Image upload failed"));
+          } else {
+            resolve(result);
+          }
+        }
+      ).end(buffer);
     });
 
-    // 5️⃣ Save to DB (optional, can skip if testing)
-    // 5️⃣ Save to DB (dummy user for free mode)
+    // 4️⃣ Save metadata (optional, safe)
     await getPrisma().image.create({
       data: {
-        clerkUserId: "guest",   // ✅ add this line
+        clerkUserId: "guest", // free user
         publicId: uploadRes.public_id,
         format: "social-adjust",
       },
     });
 
-
-    // 6️⃣ Cleanup
-    await fs.unlink(filePath);
-
-    // 7️⃣ Response
+    // 5️⃣ Response
     return NextResponse.json({
       ok: true,
       publicId: uploadRes.public_id,
@@ -77,9 +85,9 @@ export async function POST(req: NextRequest) {
       height: uploadRes.height,
     });
   } catch (err: any) {
-    console.error("Image upload error:", err);
+    console.error("[image-upload]", err);
     return NextResponse.json(
-      { ok: false, error: err.message || "Image upload failed" },
+      { ok: false, error: err?.message || "Image upload failed" },
       { status: 500 }
     );
   }
@@ -88,6 +96,6 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     ok: true,
-    message: "POST image file in multipart/form-data",
+    message: "POST image file as multipart/form-data",
   });
 }
