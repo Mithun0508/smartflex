@@ -12,7 +12,8 @@ export default function VideoUploadPage() {
   const [quality, setQuality] = useState<"480p" | "720p" | "1080p">("480p");
   const [format, setFormat] = useState<"mp4" | "webm" | "mov">("mp4");
 
-  const [status, setStatus] = useState<"idle" | "processing" | "done" | "error">("idle");
+  const [status, setStatus] =
+    useState<"idle" | "processing" | "done" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
@@ -23,11 +24,6 @@ export default function VideoUploadPage() {
     const selected = e.target.files?.[0] || null;
     if (!selected) return;
 
-    if (selected.size === 0) {
-      setError("Empty file selected.");
-      return;
-    }
-
     setFile(selected);
     setError(null);
     setStatus("idle");
@@ -35,30 +31,24 @@ export default function VideoUploadPage() {
     setCompressedSize(null);
   };
 
+  // 🔥 DIRECT CLOUDINARY UPLOAD
   const processVideo = async () => {
-    const MAX_VIDEO_SIZE = 200 * 1024 * 1024; // 200MB
-
     if (!file) {
       setError("Please choose a video first.");
       setStatus("error");
       return;
     }
 
-    if (file.size > MAX_VIDEO_SIZE) {
-      setError("Free plan allows max 200MB video.");
+    // 🔒 Free plan limit
+    if (file.size > 40 * 1024 * 1024) {
+      setError("Free plan allows max 40MB video.");
       setStatus("error");
       return;
     }
 
-    // 🔒 Pro locks
-    if (quality === "720p") {
-      setError("720p is a Pro feature (Coming Soon 🚀)");
-      setStatus("error");
-      return;
-    }
-
-    if (quality === "1080p") {
-      setError("1080p is under optimization (Coming Soon 🚀)");
+    // 🔒 Pro locks (as you wanted)
+    if (quality !== "480p") {
+      setError(`${quality} is a Pro feature (Coming Soon 🚀)`);
       setStatus("error");
       return;
     }
@@ -67,29 +57,40 @@ export default function VideoUploadPage() {
     setError(null);
 
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("target", quality);
-
-      const res = await fetch("/api/video-upload", {
+      // 1️⃣ Get signature from backend
+      const sigRes = await fetch("/api/cloudinary-sign", {
         method: "POST",
-        body: fd,
       });
 
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        const text = await res.text();
-        throw new Error(text || "Unexpected error");
-      }
+      if (!sigRes.ok) throw new Error("Auth failed");
 
-      if (!res.ok || !data.compressed?.url) {
-        throw new Error(data?.error || "Compression failed");
-      }
+      const sig = await sigRes.json();
 
-      setOutputUrl(data.compressed.url);
-      setCompressedSize(data.compressed.bytes || null);
+      // 2️⃣ Upload directly to Cloudinary
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("api_key", sig.apiKey);
+      fd.append("timestamp", sig.timestamp);
+      fd.append("signature", sig.signature);
+      fd.append("folder", sig.folder);
+
+      const uploadRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${sig.cloudName}/video/upload`,
+        { method: "POST", body: fd }
+      );
+
+      if (!uploadRes.ok) throw new Error("Upload failed");
+
+      const result = await uploadRes.json();
+
+      // 3️⃣ Generate compressed URL (480p)
+      const compressedUrl = result.secure_url.replace(
+        "/upload/",
+        "/upload/h_480,c_scale,q_auto/"
+      );
+
+      setOutputUrl(compressedUrl);
+      setCompressedSize(result.bytes);
       setStatus("done");
     } catch (err: any) {
       setError(err.message || "Unexpected error");
@@ -97,11 +98,8 @@ export default function VideoUploadPage() {
     }
   };
 
-
-
   const downloadOutput = () => {
     if (!outputUrl) return;
-
     const a = document.createElement("a");
     a.href = outputUrl;
     a.download = `smartflex-${quality}.${format}`;
@@ -123,9 +121,11 @@ export default function VideoUploadPage() {
 
   const reduction =
     file && compressedSize
-      ? `${Math.max(0, Math.round((1 - compressedSize / file.size) * 100))}%`
+      ? `${Math.max(
+        0,
+        Math.round((1 - compressedSize / file.size) * 100)
+      )}%`
       : null;
-
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 space-y-10">
       <div className="flex items-center justify-between">
