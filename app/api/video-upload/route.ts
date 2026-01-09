@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudinary } from "@/lib/cloudinary";
-import type { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
+import type { UploadApiResponse, UploadApiErrorResponse } from "cloudinary";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const form = await req.formData();
-    const file = form.get("file") as File | null;
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
 
     if (!file) {
       return NextResponse.json({ error: "File missing" }, { status: 400 });
     }
 
-    // ✅ Cloudinary free plan safe limit
+    // 🔒 Safe limit (Cloudinary free)
     const MAX_VIDEO_SIZE = 40 * 1024 * 1024; // 40MB
     if (file.size > MAX_VIDEO_SIZE) {
       return NextResponse.json(
-        { error: "Free plan allows max 40MB video only" },
+        { error: "Free plan allows max 40MB video" },
         { status: 413 }
       );
     }
@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
           uploadResult: UploadApiResponse | undefined
         ) => {
           if (err || !uploadResult) {
-            console.error("CLOUDINARY UPLOAD ERROR:", err);
             reject(err ?? new Error("Upload failed"));
           } else {
             resolve(uploadResult);
@@ -48,16 +47,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      publicId: result.public_id,
-      url: result.secure_url,
+      originalUrl: result.secure_url,
       bytes: result.bytes,
-      format: result.format,
     });
-
-  } catch (e: any) {
-    console.error("[video-upload]", e);
+  } catch (err: any) {
+    console.error("[video-upload]", err);
     return NextResponse.json(
-      { error: e?.message || "Upload failed" },
+      { error: err.message || "Upload failed" },
       { status: 500 }
     );
   }

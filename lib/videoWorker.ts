@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 import fs from "fs";
-import cloudinary from "@/lib/cloudinary";
+import { getCloudinary } from "@/lib/cloudinary";
 
 const FFMPEG = process.env.FFMPEG_PATH || "ffmpeg";
 
@@ -44,7 +44,7 @@ export async function runVideoJob({
     ffmpeg.on("close", async (code) => {
       if (code !== 0) return reject(new Error("FFmpeg failed"));
 
-      await cloudinary.uploader.upload(outputPath, {
+      await getCloudinary().uploader.upload(outputPath, {
         resource_type: "video",
         folder: "smartflex/videos",
       });
