@@ -55,14 +55,22 @@ export default function VideoUploadPage() {
         throw new Error(data.error?.message || "Upload failed");
       }
 
-      // ✅ SUCCESS
-      setOutputUrl(data.secure_url);
+      // 💥 APPLY 480p COMPRESSION HERE
+      const compressedUrl = data.secure_url.replace(
+        "/upload/",
+        "/upload/c_scale,h_480/"
+      );
+
+      // ⭐ SHOW COMPRESSED VIDEO IN UI
+      setOutputUrl(compressedUrl);
       setStatus("done");
+
     } catch (err: any) {
       setError(err.message || "Upload failed");
       setStatus("error");
     }
   };
+
 
 
   return (

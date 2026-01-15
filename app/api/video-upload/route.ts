@@ -1,60 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudinary } from "@/lib/cloudinary";
-import type { UploadApiResponse, UploadApiErrorResponse } from "cloudinary";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+    const form = await req.formData();
+    const file = form.get("file") as File | null;
 
     if (!file) {
       return NextResponse.json({ error: "File missing" }, { status: 400 });
     }
 
-    // 🔒 Safe limit (Cloudinary free)
-    const MAX_VIDEO_SIZE = 40 * 1024 * 1024; // 40MB
-    if (file.size > MAX_VIDEO_SIZE) {
-      return NextResponse.json(
-        { error: "Free plan allows max 40MB video" },
-        { status: 413 }
-      );
-    }
-
     const buffer = Buffer.from(await file.arrayBuffer());
     const cloudinary = getCloudinary();
 
-    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+    const uploadResult = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
           resource_type: "video",
           folder: "smartflex/videos",
         },
-        (
-          err: UploadApiErrorResponse | undefined,
-          uploadResult: UploadApiResponse | undefined
-        ) => {
-          if (err || !uploadResult) {
-            reject(err ?? new Error("Upload failed"));
-          } else {
-            resolve(uploadResult);
-          }
+        (err, result) => {
+          if (err || !result) reject(err || new Error("Upload failed"));
+          else resolve(result);
         }
       ).end(buffer);
     });
 
+    const result: any = uploadResult;
+
+    const compressedUrl = result.secure_url.replace(
+      "/upload/",
+      "/upload/c_scale,h_480/"
+    );
+
     return NextResponse.json({
       ok: true,
       originalUrl: result.secure_url,
-      bytes: result.bytes,
+      compressedUrl,
     });
   } catch (err: any) {
-    console.error("[video-upload]", err);
-    return NextResponse.json(
-      { error: err.message || "Upload failed" },
-      { status: 500 }
-    );
+    console.error("Video error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
