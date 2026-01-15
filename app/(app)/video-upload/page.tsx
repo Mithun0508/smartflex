@@ -26,38 +26,44 @@ export default function VideoUploadPage() {
   };
 
   const processVideo = async () => {
-    if (!file) {
-      setError("Please choose a video");
-      setStatus("error");
-      return;
-    }
+    if (!file) return;
 
     setStatus("processing");
     setError(null);
 
     try {
-      const fd = new FormData();
-      fd.append("file", file);
+      // 1️⃣ Signature lo
+      const signRes = await fetch("/api/cloudinary-sign", { method: "POST" });
+      const { signature, timestamp, apiKey, cloudName } = await signRes.json();
 
-      const res = await fetch("/api/video-upload", {
-        method: "POST",
-        body: fd,
-      });
+      // 2️⃣ Direct Cloudinary upload
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", apiKey);
+      formData.append("timestamp", timestamp);
+      formData.append("signature", signature);
+      formData.append("folder", "smartflex/videos");
 
-      const data = await res.json();
+      const uploadRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+        { method: "POST", body: formData }
+      );
 
-      if (!res.ok || !data.originalUrl) {
-        throw new Error(data.error || "Upload failed");
+      const data = await uploadRes.json();
+
+      if (!uploadRes.ok) {
+        throw new Error(data.error?.message || "Upload failed");
       }
 
-      // ✅ IMPORTANT FIX
-      setOutputUrl(data.originalUrl);
+      // ✅ SUCCESS
+      setOutputUrl(data.secure_url);
       setStatus("done");
     } catch (err: any) {
-      setError(err.message || "Unexpected error");
+      setError(err.message || "Upload failed");
       setStatus("error");
     }
   };
+
 
   return (
     <div>

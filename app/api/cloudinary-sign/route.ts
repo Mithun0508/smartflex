@@ -1,35 +1,20 @@
 import { NextResponse } from "next/server";
-import { getCloudinary } from "@/lib/cloudinary";
-import { auth } from "@clerk/nextjs/server";
-
-export const runtime = "nodejs";
+import crypto from "crypto";
 
 export async function POST() {
-  const { userId } = await auth(); // ✅ FIX HERE
+  const timestamp = Math.floor(Date.now() / 1000);
 
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const paramsToSign = `folder=smartflex/videos&timestamp=${timestamp}`;
 
-  const cloudinary = getCloudinary();
-  const timestamp = Math.round(Date.now() / 1000);
-
-  const params = {
-    timestamp,
-    folder: "smartflex/videos",
-    resource_type: "video",
-  };
-
-  const signature = cloudinary.utils.api_sign_request(
-    params,
-    process.env.CLOUDINARY_API_SECRET!
-  );
+  const signature = crypto
+    .createHash("sha1")
+    .update(paramsToSign + process.env.CLOUDINARY_API_SECRET)
+    .digest("hex");
 
   return NextResponse.json({
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-    apiKey: process.env.CLOUDINARY_API_KEY,
     timestamp,
     signature,
-    folder: params.folder,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
   });
 }
