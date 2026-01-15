@@ -53,27 +53,29 @@ export default function VideoUploadPage() {
       const signRes = await fetch("/api/cloudinary-sign", { method: "POST" });
       const sign = await signRes.json();
 
-      // 2️⃣ Cloudinary upload
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("api_key", sign.apiKey);
-      fd.append("timestamp", sign.timestamp);
-      fd.append("signature", sign.signature);
-      fd.append("folder", sign.folder);
-      fd.append("eager", "h_480,vc_h264,ac_aac");
-      fd.append("eager_async", "true");
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", sign.apiKey);
+      formData.append("timestamp", sign.timestamp);
+      formData.append("signature", sign.signature);
+      formData.append("folder", sign.folder);
+      formData.append("eager", sign.eager);
+      formData.append("eager_async", sign.eager_async);
 
       const uploadRes = await fetch(
         `https://api.cloudinary.com/v1_1/${sign.cloudName}/video/upload`,
-        { method: "POST", body: fd }
+        { method: "POST", body: formData }
       );
 
       const data = await uploadRes.json();
-      if (!uploadRes.ok) throw new Error(data.error?.message || "Upload failed");
 
-      // 3️⃣ Output video (same URL)
+      if (!uploadRes.ok) {
+        throw new Error(data.error?.message || "Upload failed");
+      }
+
       setOutputUrl(data.secure_url);
       setStatus("done");
+
     } catch (err: any) {
       setError(err.message || "Unexpected error");
       setStatus("error");

@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
+export const runtime = "nodejs";
+
 export async function POST() {
   const timestamp = Math.floor(Date.now() / 1000);
 
-  const paramsToSign = `timestamp=${timestamp}&folder=smartflex/videos`;
+  const folder = "smartflex/videos";
+  const eager = "h_480,vc_h264,ac_aac";
+  const eager_async = "true";
+
+  const paramsToSign = `eager=${eager}&eager_async=${eager_async}&folder=${folder}&timestamp=${timestamp}`;
 
   const signature = crypto
     .createHash("sha1")
@@ -16,6 +22,8 @@ export async function POST() {
     signature,
     apiKey: process.env.CLOUDINARY_API_KEY,
     cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-    folder: "smartflex/videos",
+    eager,
+    eager_async,
+    folder,
   });
 }
