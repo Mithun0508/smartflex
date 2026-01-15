@@ -60,7 +60,7 @@ export default function VideoUploadPage() {
       fd.append("timestamp", sign.timestamp);
       fd.append("signature", sign.signature);
       fd.append("folder", sign.folder);
-      fd.append("eager", "h_480,vc_h264,ac_aac,quality_auto");
+      fd.append("eager", "h_480,vc_h264,ac_aac");
       fd.append("eager_async", "true");
 
       const uploadRes = await fetch(
