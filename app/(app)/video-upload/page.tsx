@@ -9,17 +9,25 @@ function bytesToMB(bytes: number) {
 export default function VideoUploadPage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [quality, setQuality] = useState<"480p" | "720p" | "1080p">("480p");
-  const [format, setFormat] = useState<"mp4" | "webm" | "mov">("mp4");
+  const [quality, setQuality] = useState("480p");
+  const [format, setFormat] = useState("mp4");
 
-  const [status, setStatus] = useState<"idle" | "processing" | "done" | "error">("idle");
+  const [status, setStatus] = useState("idle");
   const [error, setError] = useState<string | null>(null);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
 
   const triggerPicker = () => inputRef.current?.click();
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const resetAll = () => {
+    setFile(null);
+    setError(null);
+    setOutputUrl(null);
+    setCompressedSize(null);
+    setStatus("idle");
+  };
+
+  const onFileChange = (e: any) => {
     const selected = e.target.files?.[0] || null;
     if (!selected) return;
 
@@ -30,17 +38,11 @@ export default function VideoUploadPage() {
     setCompressedSize(null);
   };
 
-  // 🔥 MAIN DIRECT UPLOAD + COMPRESSION
   const processVideo = async () => {
-    if (!file) {
-      setError("Please choose a video");
-      setStatus("error");
-      return;
-    }
+    if (!file) return;
 
-    // Only allow free tier quality
     if (quality !== "480p") {
-      setError(`${quality} is a Pro feature (Coming Soon 🚀)`);
+      setError("Only 480p is available in Free Mode.");
       setStatus("error");
       return;
     }
@@ -49,11 +51,12 @@ export default function VideoUploadPage() {
     setError(null);
 
     try {
-      // 1️⃣ Signature from server
+      // STEP 1: Get signature
       const signRes = await fetch("/api/cloudinary-sign", { method: "POST" });
-      const { signature, timestamp, apiKey, cloudName } = await signRes.json();
+      const { signature, timestamp, apiKey, cloudName } =
+        await signRes.json();
 
-      // 2️⃣ Direct upload
+      // STEP 2: Upload directly to Cloudinary
       const fd = new FormData();
       fd.append("file", file);
       fd.append("api_key", apiKey);
@@ -72,42 +75,33 @@ export default function VideoUploadPage() {
         throw new Error(data.error?.message || "Upload failed");
       }
 
-      // 3️⃣ Apply 480p compression
+      // ⭐ APPLY 480P COMPRESSION HERE
       const compressedUrl = data.secure_url.replace(
         "/upload/",
         "/upload/c_scale,h_480/"
       );
 
       setOutputUrl(compressedUrl);
-      setCompressedSize(data.bytes || null);
+      setCompressedSize(data.bytes ?? null);
+
       setStatus("done");
     } catch (err: any) {
-      setError(err.message || "Unexpected error");
+      setError(err.message || "Upload failed");
       setStatus("error");
     }
   };
 
   const downloadOutput = () => {
     if (!outputUrl) return;
-
     const a = document.createElement("a");
     a.href = outputUrl;
-    a.download = `smartflex-480p.${format}`;
-    document.body.appendChild(a);
+    a.download = "smartflex-480p.mp4";
     a.click();
-    document.body.removeChild(a);
-  };
-
-  const resetAll = () => {
-    setFile(null);
-    setStatus("idle");
-    setError(null);
-    setOutputUrl(null);
-    setCompressedSize(null);
   };
 
   const originalMB = file ? bytesToMB(file.size) : null;
   const compressedMB = compressedSize ? bytesToMB(compressedSize) : null;
+
   const reduction =
     file && compressedSize
       ? `${Math.max(0, Math.round((1 - compressedSize / file.size) * 100))}%`
@@ -124,11 +118,19 @@ export default function VideoUploadPage() {
 
       <div className="grid md:grid-cols-2 gap-10">
         <div className="space-y-8">
-
-          {/* Step 1 */}
+          {/* STEP 1 */}
           <div className="bg-[#0F1624] p-6 rounded-2xl border border-[#1b2335] shadow-xl space-y-4">
-            <h2 className="text-xl font-semibold font-poppins">Step 1 — Choose Video</h2>
-            <input ref={inputRef} type="file" accept="video/*" hidden onChange={onFileChange} />
+            <h2 className="text-xl font-semibold font-poppins">
+              Step 1 — Choose Video
+            </h2>
+
+            <input
+              ref={inputRef}
+              type="file"
+              accept="video/*"
+              hidden
+              onChange={onFileChange}
+            />
 
             <div className="flex gap-4">
               <button
@@ -155,16 +157,20 @@ export default function VideoUploadPage() {
             )}
           </div>
 
-          {/* Step 2 */}
+          {/* STEP 2 */}
           <div className="bg-[#0F1624] p-6 rounded-2xl border border-[#1b2335] shadow-xl space-y-5">
-            <h2 className="text-xl font-semibold font-poppins">Step 2 — Options</h2>
+            <h2 className="text-xl font-semibold font-poppins">
+              Step 2 — Options
+            </h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm mb-1 text-gray-300">Quality</label>
+                <label className="block text-sm mb-1 text-gray-300">
+                  Quality
+                </label>
                 <select
                   value={quality}
-                  onChange={(e) => setQuality(e.target.value as any)}
+                  onChange={(e) => setQuality(e.target.value)}
                   className="w-full bg-[#05070D] border border-[#1b2335] text-gray-200 rounded-lg px-3 py-2"
                 >
                   <option value="480p">480p (Free)</option>
@@ -174,10 +180,12 @@ export default function VideoUploadPage() {
               </div>
 
               <div>
-                <label className="block text-sm mb-1 text-gray-300">Format</label>
+                <label className="block text-sm mb-1 text-gray-300">
+                  Format
+                </label>
                 <select
                   value={format}
-                  onChange={(e) => setFormat(e.target.value as any)}
+                  onChange={(e) => setFormat(e.target.value)}
                   className="w-full bg-[#05070D] border border-[#1b2335] text-gray-200 rounded-lg px-3 py-2"
                 >
                   <option value="mp4">MP4</option>
@@ -201,12 +209,16 @@ export default function VideoUploadPage() {
           </div>
         </div>
 
-        {/* Result */}
+        {/* STEP 3 */}
         <div className="bg-[#0F1624] p-6 rounded-2xl border border-[#1b2335] shadow-xl">
-          <h2 className="text-xl font-semibold font-poppins mb-4">Step 3 — Result</h2>
+          <h2 className="text-xl font-semibold font-poppins mb-4">
+            Step 3 — Result
+          </h2>
 
           {status === "idle" && (
-            <p className="text-gray-400 text-sm">Select a video to get started.</p>
+            <p className="text-gray-400 text-sm">
+              Select a video to get started.
+            </p>
           )}
 
           {status === "processing" && (
