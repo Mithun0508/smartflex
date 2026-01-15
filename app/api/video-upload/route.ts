@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudinary } from "@/lib/cloudinary";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,36 +12,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "File missing" }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const cloudinary = getCloudinary();
-
-    const uploadResult = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        {
-          resource_type: "video",
-          folder: "smartflex/videos",
-        },
-        (err, result) => {
-          if (err || !result) reject(err || new Error("Upload failed"));
-          else resolve(result);
-        }
-      ).end(buffer);
-    });
-
-    const result: any = uploadResult;
-
-    const compressedUrl = result.secure_url.replace(
-      "/upload/",
-      "/upload/c_scale,h_480/"
-    );
-
     return NextResponse.json({
       ok: true,
-      originalUrl: result.secure_url,
-      compressedUrl,
+      ready: true, // direct upload frontend se hoga
     });
-  } catch (err: any) {
-    console.error("Video error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

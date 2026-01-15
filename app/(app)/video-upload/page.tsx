@@ -39,10 +39,8 @@ export default function VideoUploadPage() {
   };
 
   const processVideo = async () => {
-    if (!file) return;
-
-    if (quality !== "480p") {
-      setError("Only 480p is available in Free Mode.");
+    if (!file) {
+      setError("Please choose a video");
       setStatus("error");
       return;
     }
@@ -51,42 +49,33 @@ export default function VideoUploadPage() {
     setError(null);
 
     try {
-      // STEP 1: Get signature
+      // 1️⃣ Secure signature
       const signRes = await fetch("/api/cloudinary-sign", { method: "POST" });
-      const { signature, timestamp, apiKey, cloudName } =
-        await signRes.json();
+      const sign = await signRes.json();
 
-      // STEP 2: Upload directly to Cloudinary
+      // 2️⃣ Cloudinary upload
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("api_key", apiKey);
-      fd.append("timestamp", timestamp);
-      fd.append("signature", signature);
-      fd.append("folder", "smartflex/videos");
+      fd.append("api_key", sign.apiKey);
+      fd.append("timestamp", sign.timestamp);
+      fd.append("signature", sign.signature);
+      fd.append("folder", sign.folder);
+      fd.append("eager", "h_480,vc_h264,ac_aac,quality_auto");
+      fd.append("eager_async", "true");
 
       const uploadRes = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+        `https://api.cloudinary.com/v1_1/${sign.cloudName}/video/upload`,
         { method: "POST", body: fd }
       );
 
       const data = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(data.error?.message || "Upload failed");
 
-      if (!uploadRes.ok) {
-        throw new Error(data.error?.message || "Upload failed");
-      }
-
-      // ⭐ APPLY 480P COMPRESSION HERE
-      const compressedUrl = data.secure_url.replace(
-        "/upload/",
-        "/upload/c_scale,h_480/"
-      );
-
-      setOutputUrl(compressedUrl);
-      setCompressedSize(data.bytes ?? null);
-
+      // 3️⃣ Output video (same URL)
+      setOutputUrl(data.secure_url);
       setStatus("done");
     } catch (err: any) {
-      setError(err.message || "Upload failed");
+      setError(err.message || "Unexpected error");
       setStatus("error");
     }
   };
