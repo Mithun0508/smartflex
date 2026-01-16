@@ -39,17 +39,12 @@ export default function VideoUploadPage() {
   };
 
   const processVideo = async () => {
-    if (!file) {
-      setError("Please choose a video");
-      setStatus("error");
-      return;
-    }
+    if (!file) return;
 
     setStatus("processing");
     setError(null);
 
     try {
-      // 1️⃣ Secure signature
       const signRes = await fetch("/api/cloudinary-sign", { method: "POST" });
       const sign = await signRes.json();
 
@@ -73,14 +68,22 @@ export default function VideoUploadPage() {
         throw new Error(data.error?.message || "Upload failed");
       }
 
-      setOutputUrl(data.secure_url);
-      setStatus("done");
+      // 🔥 COMPRESSED RESULT
+      if (data.eager && data.eager.length > 0) {
+        setOutputUrl(data.eager[0].secure_url);
+        setCompressedSize(data.eager[0].bytes || null);
+      } else {
+        setOutputUrl(data.secure_url);
+        setCompressedSize(null);
+      }
 
+      setStatus("done");
     } catch (err: any) {
-      setError(err.message || "Unexpected error");
+      setError(err.message || "Upload failed");
       setStatus("error");
     }
   };
+
 
   const downloadOutput = () => {
     if (!outputUrl) return;
