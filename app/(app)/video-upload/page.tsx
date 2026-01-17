@@ -17,8 +17,6 @@ export default function VideoUploadPage() {
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
 
-  const MAX_95MB = 95 * 1024 * 1024; // ✅ SAFE LIMIT
-
   const triggerPicker = () => inputRef.current?.click();
 
   const resetAll = () => {
@@ -33,13 +31,7 @@ export default function VideoUploadPage() {
     const selected = e.target.files?.[0] || null;
     if (!selected) return;
 
-    // ⛔ 95MB CHECK
-    if (selected.size > MAX_95MB) {
-      setError("Free plan allows max 95MB video only.");
-      setFile(null);
-      return;
-    }
-
+    // ❌ NO SIZE LIMIT CHECK ANYMORE
     setFile(selected);
     setError(null);
     setStatus("idle");
@@ -50,20 +42,15 @@ export default function VideoUploadPage() {
   const processVideo = async () => {
     if (!file) return;
 
-    // ⛔ DOUBLE CHECK BEFORE UPLOAD
-    if (file.size > MAX_95MB) {
-      setError("Free plan allows max 95MB video only.");
-      setStatus("error");
-      return;
-    }
-
     setStatus("processing");
     setError(null);
 
     try {
+      // 1️⃣ Generate upload signature
       const signRes = await fetch("/api/cloudinary-sign", { method: "POST" });
       const sign = await signRes.json();
 
+      // 2️⃣ Cloudinary Direct Upload
       const formData = new FormData();
       formData.append("file", file);
       formData.append("api_key", sign.apiKey);
@@ -84,13 +71,17 @@ export default function VideoUploadPage() {
         throw new Error(data.error?.message || "Upload failed");
       }
 
-      if (data.eager && data.eager.length > 0) {
-        setOutputUrl(data.eager[0].secure_url);
-        setCompressedSize(data.eager[0].bytes || null);
-      } else {
-        setOutputUrl(data.secure_url);
-        setCompressedSize(null);
-      }
+      // 🔥 FINAL FIX (best practice)
+      const compressedUrl =
+        data.eager?.[0]?.secure_url || null; // If compression ready
+
+      const finalUrl =
+        compressedUrl || data.secure_url; // fallback to original if eager pending
+
+      setOutputUrl(finalUrl);
+
+      // Compressed size (optional)
+      setCompressedSize(data.eager?.[0]?.bytes || null);
 
       setStatus("done");
     } catch (err: any) {
