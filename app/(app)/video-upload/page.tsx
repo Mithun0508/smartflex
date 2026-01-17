@@ -17,6 +17,8 @@ export default function VideoUploadPage() {
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
 
+  const MAX_95MB = 95 * 1024 * 1024; // ✅ SAFE LIMIT
+
   const triggerPicker = () => inputRef.current?.click();
 
   const resetAll = () => {
@@ -31,6 +33,13 @@ export default function VideoUploadPage() {
     const selected = e.target.files?.[0] || null;
     if (!selected) return;
 
+    // ⛔ 95MB CHECK
+    if (selected.size > MAX_95MB) {
+      setError("Free plan allows max 95MB video only.");
+      setFile(null);
+      return;
+    }
+
     setFile(selected);
     setError(null);
     setStatus("idle");
@@ -40,6 +49,13 @@ export default function VideoUploadPage() {
 
   const processVideo = async () => {
     if (!file) return;
+
+    // ⛔ DOUBLE CHECK BEFORE UPLOAD
+    if (file.size > MAX_95MB) {
+      setError("Free plan allows max 95MB video only.");
+      setStatus("error");
+      return;
+    }
 
     setStatus("processing");
     setError(null);
@@ -68,7 +84,6 @@ export default function VideoUploadPage() {
         throw new Error(data.error?.message || "Upload failed");
       }
 
-      // 🔥 COMPRESSED RESULT
       if (data.eager && data.eager.length > 0) {
         setOutputUrl(data.eager[0].secure_url);
         setCompressedSize(data.eager[0].bytes || null);
@@ -83,7 +98,6 @@ export default function VideoUploadPage() {
       setStatus("error");
     }
   };
-
 
   const downloadOutput = () => {
     if (!outputUrl) return;
