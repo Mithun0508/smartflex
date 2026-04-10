@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         compressedUrl: compressed.secure_url,
         compressedSize: compressed.bytes,
         duration: payload.duration,
-        status: "COMPLETE",
+        status: "COMPLETED",
       },
     });
   }
