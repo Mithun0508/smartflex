@@ -1,3 +1,5 @@
+// file: prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,24 +14,29 @@ model Video {
   clerkUserId    String
   title          String
   description    String?
-  publicId       String
-  secureUrl      String
-  duration       Int?
-  originalSize   Int?
-  compressedSize Int?
+  publicId       String      // Original Video ID from Cloudinary
+  secureUrl      String      // Original Video URL
+  duration       Float?      // Int se Float kiya taaki seconds accurate rahein
+  originalSize   String?     // Int se String kiya taaki badi file sizes (GBs) handle ho sakein
+  compressedSize String?     // String is safer for very large numbers
+  compressedUrl  String?     // Compressed video link from Cloudinary
+  
+  // ✅ Nayi fields status tracking ke liye
+  status         VideoStatus @default(PENDING)
+  transformationId String?   // Cloudinary eager transformation status track karne ke liye
+  
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
-  compressedUrl  String?
-  status         VideoStatus @default(PENDING)
 }
 
 enum VideoStatus {
-  PENDING
-  PROCESSING
-  COMPLETE
-  FAILED
+  PENDING      // Upload shuru hua hai
+  PROCESSING   // Cloudinary compress kar raha hai
+  COMPLETED    // Compression done, download ready
+  FAILED       // Kuch galti hui
 }
 
+// ... baaki Models (Feedback, EnterpriseLead, Image) same rahenge
 model Feedback {
   id        String   @id @default(uuid())
   name      String?
@@ -45,14 +52,11 @@ model EnterpriseLead {
   requirements String
   createdAt    DateTime @default(now())
 }
+
 model Image {
-  id           String   @id @default(cuid())
-  clerkUserId  String
-  publicId     String
-  format       String?
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  clerkUserId String
+  publicId    String
+  format      String?
+  createdAt   DateTime @default(now())
 }
-
-
-
-

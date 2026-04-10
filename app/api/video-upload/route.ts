@@ -1,69 +1,59 @@
-import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
+// file: app/api/video-upload/route.ts
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+import { NextRequest, NextResponse } from "next/server";
+import { v2 as cloudinary } from "cloudinary";
+import { auth } from "@clerk/nextjs/server";
+
+// Cloudinary Configuration
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const form = await req.formData();
-    const file = form.get("file") as File | null;
+    const { userId } = await auth();
 
-    if (!file) {
-      return NextResponse.json({ error: "File missing" }, { status: 400 });
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 🔐 Get Cloudinary credentials
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
-    const apiKey = process.env.CLOUDINARY_API_KEY!;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET!;
-
-    // ❗ Large video must use chunk upload + signed eager transformations
+    // 🔐 Cloudinary Signature Logic
+    // Hum video file ko handle nahi karenge, sirf permission denge.
     const timestamp = Math.floor(Date.now() / 1000);
+    
+    // Compression Settings (H264, 720p, optimized bitrate)
+    const eager = "w_1280,h_720,c_limit,vc_h264,crf_28,ac_aac"; 
+    const folder = "smartflex/videos";
 
-    const eager = "h_480,vc_h264,ac_aac"; // compression target
+    const paramsToSign = {
+      timestamp,
+      folder,
+      eager,
+      resource_type: "video",
+    };
 
-    const stringToSign = `eager=${eager}&folder=smartflex/videos&timestamp=${timestamp}${apiSecret}`;
-    const signature = crypto.createHash("sha1").update(stringToSign).digest("hex");
+    // Generate SHA-1 Signature using Cloudinary SDK
+    const signature = cloudinary.utils.api_sign_request(
+      paramsToSign,
+      process.env.CLOUDINARY_API_SECRET!
+    );
 
-    // 🔄 Prepare chunk upload URL
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`;
-
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("api_key", apiKey);
-    fd.append("timestamp", timestamp.toString());
-    fd.append("signature", signature);
-    fd.append("folder", "smartflex/videos");
-    fd.append("eager", eager);
-    fd.append("resource_type", "video");
-    fd.append("chunk_size", (6 * 1024 * 1024).toString()); // 6 MB chunks
-
-    // 🔥 Upload to Cloudinary
-    const uploadRes = await fetch(uploadUrl, {
-      method: "POST",
-      body: fd,
-    });
-
-    const data = await uploadRes.json();
-
-    if (!uploadRes.ok) {
-      return NextResponse.json(
-        { error: data.error?.message || "Upload failed" },
-        { status: 500 }
-      );
-    }
-
+    // Return all credentials to Frontend
     return NextResponse.json({
-      ok: true,
-      publicId: data.public_id,
-      originalUrl: data.secure_url,
-      compressedUrl: data.eager?.[0]?.secure_url || null,
-      status: "processing",
+      signature,
+      timestamp,
+      cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      eager,
+      folder,
     });
-  } catch (err: any) {
+
+  } catch (error: any) {
+    console.error("Signature Error:", error);
     return NextResponse.json(
-      { error: err.message || "Unexpected error occurred" },
+      { error: "Could not generate upload signature" },
       { status: 500 }
     );
   }
