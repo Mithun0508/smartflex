@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
         compressedUrl,
         compressedSize,
         duration,
-        status: "COMPLETE",
+        status: "COMPLETED",
       },
     });
 
