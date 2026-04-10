@@ -5,7 +5,7 @@ import type { Configuration as WebpackConfig } from "webpack";
 const nextConfig: NextConfig = {
   experimental: {
     // Clerk / middleware ke liye (safe)
-    middlewareClientMaxBodySize: 1024 * 1024 * 1024, // 1GB
+    proxyClientMaxBodySize: 1024 * 1024 * 1024, // 1GB
   },
 
   turbopack: {},

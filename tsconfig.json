@@ -18,12 +18,11 @@
         "name": "next"
       }
     ],
-    "ignoreDeprecations": "6.0", // 👈 Ye line add kar dijiye warning hatane ke liye
-    "baseUrl": ".", 
+    // ✅ "baseUrl" ki ab zaroorat nahi hai
     "paths": {
-      "@/components/*": ["components/*"],
-      "@/utils/*": ["utils/*"],
-      "@/*": ["*"] 
+      "@/components/*": ["./components/*"], // 👈 "./" add kiya gaya hai
+      "@/utils/*": ["./utils/*"],           // 👈 "./" add kiya gaya hai
+      "@/*": ["./*"]                        // 👈 "./" add kiya gaya hai
     }
   },
   "include": [
