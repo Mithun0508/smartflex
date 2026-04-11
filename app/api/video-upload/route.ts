@@ -20,18 +20,19 @@ export async function POST(req: NextRequest) {
     }
 
     // 🔐 Cloudinary Signature Logic
-    // Hum video file ko handle nahi karenge, sirf permission denge.
     const timestamp = Math.floor(Date.now() / 1000);
     
-    // Compression Settings (H264, 720p, optimized bitrate)
+    // Compression Settings
     const eager = "w_1280,h_720,c_limit,vc_h264,crf_28,ac_aac"; 
     const folder = "smartflex/videos";
+    // 👈 Naya Preset Name jo humne dashboard mein banaya
+    const upload_preset = "smartflex_video_preset"; 
 
     const paramsToSign = {
       timestamp,
       folder,
       eager,
-      resource_type: "video",
+      upload_preset, // 🔥 Yeh add karna MUST hai signature validation ke liye
     };
 
     // Generate SHA-1 Signature using Cloudinary SDK
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
       apiKey: process.env.CLOUDINARY_API_KEY,
       eager,
       folder,
+      upload_preset, // Frontend ko bhi bhej rahe hain taaki wo use kar sake
     });
 
   } catch (error: any) {
