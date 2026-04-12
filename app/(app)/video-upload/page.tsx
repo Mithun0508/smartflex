@@ -39,62 +39,55 @@ export default function VideoUploadPage() {
   };
 
   const processVideo = async () => {
-    if (!file) return;
+  if (!file) return;
 
-    setStatus("processing");
-    setError(null);
+  setStatus("processing");
+  setError(null);
 
-    try {
-      // 1️⃣ Generate upload signature (Updated Path)
-      const signRes = await axios.post("/api/video-upload");
-      const sign = signRes.data;
+  try {
+    // 1️⃣ Backend se signature aur preset mangwana
+    const signRes = await axios.post("/api/video-upload");
+    const signData = signRes.data;
 
-      // 2️⃣ Cloudinary Direct Upload with CORS Fix
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("api_key", sign.apiKey);
-      formData.append("timestamp", sign.timestamp.toString());
-      formData.append("signature", sign.signature);
-      formData.append("folder", sign.folder);
-      formData.append("eager", sign.eager);
-      formData.append("upload_preset", sign.upload_preset); // 🔥 Naya Preset add kiya
+    // 2️⃣ Cloudinary Direct Upload Payload
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("api_key", signData.apiKey);
+    formData.append("timestamp", signData.timestamp.toString());
+    formData.append("signature", signData.signature);
+    formData.append("folder", signData.folder);
+    formData.append("eager", signData.eager);
+    formData.append("upload_preset", signData.upload_preset); // 👈 Ye wahi preset hai
 
-      const uploadRes = await axios.post(
-        `https://api.cloudinary.com/v1_1/${sign.cloudName}/video/upload`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-          // 🛡️ CORS FIX: Clerk headers ko Cloudinary par jane se rokna
-          transformRequest: [(data, headers) => {
-            delete headers["Authorization"];
-            return data;
-          }],
-        }
-      );
+    // 3️⃣ Axios POST request with CORS Fix
+    const uploadRes = await axios.post(
+      `https://api.cloudinary.com/v1_1/${signData.cloudName}/video/upload`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        transformRequest: [(data, headers) => {
+          // 🛡️ Railway/Clerk ke Authorization headers ko Cloudinary par jane se rokna
+          delete headers["Authorization"];
+          return data;
+        }],
+      }
+    );
 
-      const data = uploadRes.data;
+    // 4️⃣ Success logic
+    const data = uploadRes.data;
+    const finalUrl = data.eager?.[0]?.secure_url || data.secure_url;
+    
+    setOutputUrl(finalUrl);
+    setCompressedSize(data.eager?.[0]?.bytes || null);
+    setStatus("done");
 
-      // 3️⃣ Database mein record save karna (Future history ke liye)
-      await axios.post("/api/save-video", {
-        publicId: data.public_id,
-        title: file.name,
-        secureUrl: data.secure_url,
-        compressedUrl: data.eager?.[0]?.secure_url || data.secure_url,
-        originalSize: file.size,
-        duration: data.duration,
-      });
-
-      const finalUrl = data.eager?.[0]?.secure_url || data.secure_url;
-      setOutputUrl(finalUrl);
-      setCompressedSize(data.eager?.[0]?.bytes || null);
-      setStatus("done");
-
-    } catch (err: any) {
-      console.error("Upload process error:", err);
-      setError(err.response?.data?.error?.message || err.message || "Upload failed");
-      setStatus("error");
-    }
-  };
+  } catch (err: any) {
+    console.error("Upload Error:", err);
+    const errorMsg = err.response?.data?.error || err.message || "Something went wrong";
+    setError(errorMsg);
+    setStatus("error");
+  }
+};
 
   // ... (Baaki saara UI code wahi rahega jo aapne diya tha)
   
