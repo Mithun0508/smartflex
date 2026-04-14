@@ -14,9 +14,9 @@ export default clerkMiddleware(async (auth, req) => {
     // 2. Type checking bypass karke protect() call karein
     // Hum 'as any' isliye use kar rahe hain taaki TS chup ho jaye, 
     // runtime par Clerk ise handle kar lega.
-    if (typeof (authObj as any).protect === 'function') {
-        (authObj as any).protect();
-    }
+    //if (typeof (authObj as any).protect === 'function') {
+      //  (authObj as any).protect();
+    //}
   }
 });
 
