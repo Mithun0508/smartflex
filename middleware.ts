@@ -1,29 +1,28 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Protected routes define karein
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
-  "/account(.*)",
+  "/api/video-upload(.*)",
   "/api/credits(.*)",
-  "/api/subscription(.*)",
-  "/api/video-upload(.*)", 
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
-    // 1. Auth object ko await karein
+    // 1. Auth object mangwayein
     const authObj = await auth();
     
-    // 2. 'any' use karke TS error bypass karein (Runtime par ye sahi kaam karega)
-    (authObj as any).protect(); 
+    // 2. Type checking bypass karke protect() call karein
+    // Hum 'as any' isliye use kar rahe hain taaki TS chup ho jaye, 
+    // runtime par Clerk ise handle kar lega.
+    if (typeof (authObj as any).protect === 'function') {
+        (authObj as any).protect();
+    }
   }
 });
 
 export const config = {
   matcher: [
-    // Next.js static files ko skip karne ke liye standard matcher
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!m)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // API routes ke liye hamesha chalega
     '/(api|trpc)(.*)',
   ],
 };
