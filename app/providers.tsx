@@ -1,18 +1,14 @@
 "use client";
-
 import { ClerkProvider } from "@clerk/nextjs";
 
-export default function Providers({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      afterSignInUrl="/dashboard"
-      afterSignUpUrl="/dashboard"
+      // ✅ Purane 'afterSignInUrl' ko badal kar ye karein:
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
       appearance={{
         variables: {
           colorPrimary: "#16B6B0",
@@ -26,12 +22,8 @@ export default function Providers({
             color: "#FFFFFF",
             border: "1px solid #1b2335",
           },
-          socialButtonsBlockButtonText: {
-            color: "#FFFFFF",
-          },
-          socialButtonsBlockButtonArrow: {
-            color: "#FFFFFF",
-          },
+          socialButtonsBlockButtonText: { color: "#FFFFFF" },
+          socialButtonsBlockButtonArrow: { color: "#FFFFFF" },
         },
       }}
     >
