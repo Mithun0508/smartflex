@@ -1,6 +1,6 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
-// Hum temporarily protection hata rahe hain ye dekhne ke liye ki 401 jata hai ya nahi
+// Sab kuch public rakho abhi
 export default clerkMiddleware(); 
 
 export const config = {
