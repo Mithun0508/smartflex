@@ -57,7 +57,7 @@ export default function VideoUploadPage() {
     formData.append("signature", signData.signature);
     formData.append("folder", signData.folder);
     formData.append("eager", signData.eager);
-    formData.append("upload_preset", signData.upload_preset); // 👈 Ye wahi preset hai
+     // 👈 Ye wahi preset hai
 
     // 3️⃣ Axios POST request with CORS Fix
     const uploadRes = await axios.post(
