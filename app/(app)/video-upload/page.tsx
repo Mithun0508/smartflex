@@ -51,12 +51,11 @@ export default function VideoUploadPage() {
 
       // 2️⃣ Cloudinary Direct Upload Payload
       const formData = new FormData();
+
       formData.append("file", file);
       formData.append("api_key", signData.apiKey);
       formData.append("timestamp", signData.timestamp.toString());
       formData.append("signature", signData.signature);
-      formData.append("folder", signData.folder);
-      formData.append("eager", signData.eager);
       // 👈 Ye wahi preset hai
 
       // 3️⃣ Axios POST request with CORS Fix
