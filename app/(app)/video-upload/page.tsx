@@ -40,6 +40,11 @@ export default function VideoUploadPage() {
 
   const processVideo = async () => {
     if (!file) return;
+    if (file.size > 100 * 1024 * 1024) {
+      setError("Maximum upload size is 100MB");
+      setStatus("error");
+      return;
+    }
 
     setStatus("processing");
     setError(null);
@@ -172,6 +177,9 @@ export default function VideoUploadPage() {
             <button onClick={processVideo} disabled={!file || status === "processing"} className="px-6 py-2 bg-[#16B6B0] text-black rounded-lg font-semibold transition hover:opacity-90 disabled:opacity-40">
               {status === "processing" ? "Processing…" : "Compress Video"}
             </button>
+            <p className="text-yellow-400 text-xs mt-2 text-center">
+              ⚠️ Don’t leave this page during processing. Leaving may cancel the operation.
+            </p>
             {status === "error" && error && <p className="text-red-400 text-sm">Error: {error}</p>}
           </div>
         </div>
