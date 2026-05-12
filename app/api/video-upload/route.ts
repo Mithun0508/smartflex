@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
+import { auth } from "@clerk/nextjs/server";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -9,9 +10,19 @@ cloudinary.config({
 
 export async function POST(req: NextRequest) {
   try {
+    // 🔥 Check login
+    const { userId } = await auth();
+
+    // ❌ Not logged in
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const timestamp = Math.floor(Date.now() / 1000);
 
-    // 🔥 ONLY minimal params (no mismatch possible)
     const paramsToSign = {
       timestamp,
     };
@@ -27,7 +38,11 @@ export async function POST(req: NextRequest) {
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
       apiKey: process.env.CLOUDINARY_API_KEY,
     });
+
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
