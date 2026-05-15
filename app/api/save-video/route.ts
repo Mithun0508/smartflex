@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       );
     }
+    console.log("🔥 TODAY UPLOAD COUNT:", todayUploads);
 
     // 🔥 Extract fields
     const {
