@@ -40,6 +40,8 @@ export default function VideoUploadPage() {
 
   const processVideo = async () => {
     if (!file) return;
+
+    // 🔥 100MB limit
     if (file.size > 100 * 1024 * 1024) {
       setError("Maximum upload size is 100MB");
       setStatus("error");
@@ -50,37 +52,51 @@ export default function VideoUploadPage() {
     setError(null);
 
     try {
-      // 1️⃣ Backend se signature aur preset mangwana
+      // 1️⃣ Backend se signature lena
       const signRes = await axios.post("/api/video-upload");
       const signData = signRes.data;
 
-      // 2️⃣ Cloudinary Direct Upload Payload
+      // 2️⃣ Cloudinary upload payload
       const formData = new FormData();
 
       formData.append("file", file);
       formData.append("api_key", signData.apiKey);
       formData.append("timestamp", signData.timestamp.toString());
       formData.append("signature", signData.signature);
-      // 👈 Ye wahi preset hai
 
-      // 3️⃣ Axios POST request with CORS Fix
+      // 3️⃣ Upload to Cloudinary
       const uploadRes = await axios.post(
         `https://api.cloudinary.com/v1_1/${signData.cloudName}/video/upload`,
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
           transformRequest: [(data, headers) => {
-            // 🛡️ Railway/Clerk ke Authorization headers ko Cloudinary par jane se rokna
             delete headers["Authorization"];
             return data;
           }],
         }
       );
 
-      // 4️⃣ Success logic
+      // 4️⃣ Upload success data
       const data = uploadRes.data;
-      const finalUrl = data.eager?.[0]?.secure_url || data.secure_url;
 
+      const finalUrl =
+        data.eager?.[0]?.secure_url || data.secure_url;
+
+      // 🔥 Save video details to database
+      await axios.post("/api/save-video", {
+        publicId: data.public_id,
+        title: file.name,
+        description: "Video uploaded via SmartFlex",
+        secureUrl: data.secure_url,
+        compressedUrl: finalUrl,
+        duration: data.duration,
+        originalSize: file.size,
+      });
+
+      // 5️⃣ UI update
       setOutputUrl(finalUrl);
       setCompressedSize(data.eager?.[0]?.bytes || null);
       setStatus("done");
@@ -88,8 +104,15 @@ export default function VideoUploadPage() {
     } catch (err: any) {
       console.error("🔥 Upload Error FULL:", err);
 
-      console.log("🔥 RESPONSE DATA:", err.response?.data);
-      console.log("🔥 STATUS:", err.response?.status);
+      console.log(
+        "🔥 RESPONSE DATA:",
+        err.response?.data
+      );
+
+      console.log(
+        "🔥 STATUS:",
+        err.response?.status
+      );
 
       const errorMsg =
         err.response?.data?.error?.message ||
