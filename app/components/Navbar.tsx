@@ -15,7 +15,7 @@ export default function Navbar() {
   const links = [
     { name: "Home", href: "/" },
     { name: "Video Compression", href: "/video-upload" },
-    { name: "Image Adjustment", href: "/social-share" },
+    { name: "Social Media Resizer", href: "/social-share" },
     { name: "Pricing", href: "/pricing" },
     { name: "Feedback", href: "/feedback" },
     { name: "About", href: "/about" },

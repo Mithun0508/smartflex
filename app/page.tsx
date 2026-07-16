@@ -66,10 +66,10 @@ export default function HomePage() {
                   <p className="font-semibold mt-2">Video Compressor</p>
                 </div>
 
-                <div className="p-5 bg-[#0f1624] hover:bg-[#151d2d] border border-[#1b2335] rounded-xl transition cursor-pointer">
+                <a href="/social-share" className="p-5 bg-[#0f1624] hover:bg-[#151d2d] border border-[#1b2335] rounded-xl transition cursor-pointer block">
                   <span className="text-3xl">🖼️</span>
-                  <p className="font-semibold mt-2">Image Adjustment</p>
-                </div>
+                  <p className="font-semibold mt-2">Social Media Resizer</p>
+                </a>
 
                 <div className="p-5 bg-[#0f1624] hover:bg-[#151d2d] border border-[#1b2335] rounded-xl transition cursor-pointer">
                   <span className="text-3xl">⚡</span>
@@ -98,11 +98,11 @@ export default function HomePage() {
                 </p>
               </a>
 
-              <a href="/image-upload" className="bg-[#0f1624] hover:-translate-y-1 border border-[#1b2335] rounded-xl p-8 shadow-lg transition-all block">
+              <a href="/social-share" className="bg-[#0f1624] hover:-translate-y-1 border border-[#1b2335] rounded-xl p-8 shadow-lg transition-all block">
                 <span className="text-5xl mb-4 block">📷</span>
-                <h3 className="text-xl font-semibold font-poppins">Image Adjustment</h3>
+                <h3 className="text-xl font-semibold font-poppins">Social Media Resizer</h3>
                 <p className="text-gray-400 text-sm mt-3 font-inter">
-                  Resize, enhance & optimize for any platform.
+                  Resize, crop & optimize images for Instagram, Twitter, and Facebook.
                 </p>
               </a>
 

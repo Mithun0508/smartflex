@@ -18,29 +18,48 @@ export async function POST(req: NextRequest) {
     // 🔥 Request body
     const body = await req.json();
 
-    // 🔥 Daily upload limit check (Free Plan)
-    const todayStart = startOfDay(new Date());
-
-    const todayUploads = await prisma.video.count({
-      where: {
-        clerkUserId: userId,
-        createdAt: {
-          gte: todayStart,
-        },
-      },
+    // Fetch User from database
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
     });
 
-    // 🚫 Block if limit exceeded
-    if (todayUploads >= 5) {
-      return NextResponse.json(
-        {
-          error:
-            "Daily upload limit reached (5 uploads/day for free plan)",
+    const isPro = userRecord?.isPro || false;
+    const credits = userRecord?.credits || 0;
+
+    // Daily upload limit check (Only for Free Users)
+    if (!isPro) {
+      const todayStart = startOfDay(new Date());
+
+      const todayUploads = await prisma.video.count({
+        where: {
+          clerkUserId: userId,
+          createdAt: {
+            gte: todayStart,
+          },
         },
-        { status: 403 }
-      );
+      });
+
+      // Block if limit exceeded and user has no credits to consume
+      if (todayUploads >= 5) {
+        if (credits > 0) {
+          // Consume 1 credit
+          await prisma.user.update({
+            where: { id: userId },
+            data: { credits: { decrement: 1 } },
+          });
+          console.log(`[save-video] User ${userId} consumed 1 credit. Remaining: ${credits - 1}`);
+        } else {
+          return NextResponse.json(
+            {
+              error:
+                "Daily upload limit reached (5 uploads/day for free plan). Please buy credits or upgrade to Pro.",
+            },
+            { status: 403 }
+          );
+        }
+      }
     }
-    console.log("🔥 TODAY UPLOAD COUNT:", todayUploads);
+    console.log("🔥 TODAY UPLOAD COUNT (for free limits validation):", isPro ? "N/A (Pro)" : "Tracked");
 
     // 🔥 Extract fields
     const {

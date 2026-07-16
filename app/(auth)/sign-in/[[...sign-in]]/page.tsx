@@ -7,7 +7,7 @@ export default function Page() {
       {/* ❌ Purana: redirectUrl="/dashboard"
          ✅ Naya: fallbackRedirectUrl ya forceRedirectUrl
       */}
-      <SignIn fallbackRedirectUrl="/dashboard" forceRedirectUrl="/dashboard" />
+      <SignIn fallbackRedirectUrl="/dashboard" />
     </div>
   );
 }

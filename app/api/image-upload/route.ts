@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudinary } from "@/lib/cloudinary";
 import { getPrisma } from "@/lib/db";
+import { auth } from "@clerk/nextjs/server";
 import type {
   UploadApiErrorResponse,
   UploadApiResponse,
@@ -67,10 +68,13 @@ export async function POST(req: NextRequest) {
       ).end(buffer);
     });
 
-    // 4️⃣ Save metadata (optional, safe)
+    // 4️⃣ Save metadata associated with logged-in user
+    const { userId } = await auth();
+    const dbUserId = userId || "guest";
+
     await getPrisma().image.create({
       data: {
-        clerkUserId: "guest", // free user
+        clerkUserId: dbUserId,
         publicId: uploadRes.public_id,
         format: "social-adjust",
       },

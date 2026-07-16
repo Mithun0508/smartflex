@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
       where: { publicId: payload.public_id },
       data: {
         compressedUrl: compressed.secure_url,
-        compressedSize: compressed.bytes,
-        duration: payload.duration,
+        compressedSize: compressed.bytes ? String(compressed.bytes) : null,
+        duration: payload.duration ? parseFloat(payload.duration) : null,
         status: "COMPLETED",
       },
     });

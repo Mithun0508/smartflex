@@ -72,7 +72,7 @@ export default function SocialShare() {
 
       {/* PAGE HEADER */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold font-poppins">Image Adjustment</h1>
+        <h1 className="text-3xl font-bold font-poppins">Social Media Resizer</h1>
         <span className="px-4 py-1 text-sm rounded-full bg-[#0F1624] border border-[#1b2335]">
           SmartFlex
         </span>

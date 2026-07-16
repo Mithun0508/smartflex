@@ -17,6 +17,7 @@ export default function VideoUploadPage() {
   const [error, setError] = useState<string | null>(null);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const triggerPicker = () => inputRef.current?.click();
 
@@ -25,6 +26,7 @@ export default function VideoUploadPage() {
     setError(null);
     setOutputUrl(null);
     setCompressedSize(null);
+    setUploadProgress(null);
     setStatus("idle");
   };
 
@@ -36,6 +38,7 @@ export default function VideoUploadPage() {
     setStatus("idle");
     setOutputUrl(null);
     setCompressedSize(null);
+    setUploadProgress(null);
   };
 
   const processVideo = async () => {
@@ -52,17 +55,21 @@ export default function VideoUploadPage() {
     setError(null);
 
     try {
-      // 1️⃣ Backend se signature lena
-      const signRes = await axios.post("/api/video-upload");
+      // 1️⃣ Backend se signature lena (ab hum selected quality bhi bhejenge)
+      const signRes = await axios.post("/api/video-upload", { quality });
       const signData = signRes.data;
 
-      // 2️⃣ Cloudinary upload payload
+      // 2️⃣ Cloudinary upload payload (signed params add karna zaroori hai)
       const formData = new FormData();
 
       formData.append("file", file);
       formData.append("api_key", signData.apiKey);
       formData.append("timestamp", signData.timestamp.toString());
       formData.append("signature", signData.signature);
+      formData.append("eager", signData.eager);
+      formData.append("eager_async", signData.eagerAsync);
+      formData.append("eager_notification_url", signData.eagerNotificationUrl);
+      formData.append("folder", signData.folder);
 
       // 3️⃣ Upload to Cloudinary
       const uploadRes = await axios.post(
@@ -76,12 +83,19 @@ export default function VideoUploadPage() {
             delete headers["Authorization"];
             return data;
           }],
+          onUploadProgress: (progressEvent) => {
+            const total = progressEvent.total || file.size;
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / total);
+            setUploadProgress(percentCompleted);
+          },
         }
       );
 
       // 4️⃣ Upload success data
       const data = uploadRes.data;
 
+      // Note: Cloudinary return syntax may vary. Eager might be processing in background, so we check status from DB later.
+      // Initially, secure_url will be the original, but finalUrl can fallback or poll.
       const finalUrl =
         data.eager?.[0]?.secure_url || data.secure_url;
 
@@ -97,11 +111,13 @@ export default function VideoUploadPage() {
       });
 
       // 5️⃣ UI update
+      setUploadProgress(null);
       setOutputUrl(finalUrl);
       setCompressedSize(data.eager?.[0]?.bytes || null);
       setStatus("done");
 
     } catch (err: any) {
+      setUploadProgress(null);
       console.error("🔥 Upload Error FULL:", err);
 
       console.log(
@@ -188,6 +204,16 @@ export default function VideoUploadPage() {
                   <option value="480p">480p (Free)</option>
                   <option value="720p">720p (Pro)</option>
                 </select>
+                {quality === "480p" && (
+                  <p className="text-[11px] text-gray-400 mt-1 font-inter">
+                    ℹ️ Watermarked with <strong>smartflex.com</strong>
+                  </p>
+                )}
+                {quality === "720p" && (
+                  <p className="text-[11px] text-[#16B6B0] mt-1 font-inter font-medium">
+                    ✨ No watermark, High Definition
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm mb-1 text-gray-300">Format</label>
@@ -200,7 +226,7 @@ export default function VideoUploadPage() {
             <button onClick={processVideo} disabled={!file || status === "processing"} className="px-6 py-2 bg-[#16B6B0] text-black rounded-lg font-semibold transition hover:opacity-90 disabled:opacity-40">
               {status === "processing" ? "Processing…" : "Compress Video"}
             </button>
-            <p className="text-yellow-400 text-xs mt-2 text-center">
+            <p className="text-yellow-400 text-xs mt-2 text-center font-inter">
               ⚠️ Don’t leave this page during processing. Leaving may cancel the operation.
             </p>
             {status === "error" && error && <p className="text-red-400 text-sm">Error: {error}</p>}
@@ -209,11 +235,37 @@ export default function VideoUploadPage() {
 
         <div className="bg-[#0F1624] p-6 rounded-2xl border border-[#1b2335] shadow-xl">
           <h2 className="text-xl font-semibold font-poppins mb-4">Step 3 — Result</h2>
-          {status === "idle" && <p className="text-gray-400 text-sm">Select a video to get started.</p>}
+          {status === "idle" && <p className="text-gray-400 text-sm font-inter">Select a video to get started.</p>}
           {status === "processing" && (
-            <div className="space-y-3">
-              <div className="animate-spin h-6 w-6 border-2 border-t-transparent border-gray-300 rounded-full"></div>
-              <p className="text-gray-400 text-sm">Uploading & processing…</p>
+            <div className="space-y-6">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin h-5 w-5 border-2 border-t-transparent border-[#16B6B0] rounded-full"></div>
+                  <p className="text-gray-300 text-sm font-inter font-medium">
+                    {uploadProgress !== null && uploadProgress < 100
+                      ? `Uploading file to cloud: ${uploadProgress}%`
+                      : "Cloudinary is compressing video..."}
+                  </p>
+                </div>
+                {/* Visual Progress Bar */}
+                {uploadProgress !== null && (
+                  <div className="w-full bg-[#05070D] h-2 rounded-full overflow-hidden border border-[#1b2335]">
+                    <div
+                      className="bg-[#16B6B0] h-full rounded-full transition-all duration-300 shadow-[0_0_8px_#16B6B0]"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Ad Placeholder during wait time */}
+              <div className="p-4 bg-[#05070D] border border-dashed border-[#1b2335] rounded-xl text-center space-y-2 mt-4">
+                <span className="text-[10px] text-gray-500 block uppercase tracking-wider font-semibold font-inter">Sponsored Ad</span>
+                <div className="h-40 bg-[#0F1624]/60 rounded-lg flex flex-col items-center justify-center border border-[#1b2335] p-4 text-center">
+                  <p className="text-xs text-[#16B6B0] font-semibold mb-1 uppercase">Stripe / AdSense Placement</p>
+                  <p className="text-[11px] text-gray-400 max-w-xs font-inter">This space displays banner ads for Free users to help maintain free video compression services.</p>
+                </div>
+              </div>
             </div>
           )}
           {status === "done" && outputUrl && (
