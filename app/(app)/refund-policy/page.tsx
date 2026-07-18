@@ -12,33 +12,33 @@ export default function RefundPolicyPage() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">2. Refund Eligibility</h2>
-            <p>We offer a <strong className="text-white">7-day refund policy</strong> for new Pro subscriptions. If you are not satisfied with our service within 7 days of your first subscription payment, you may request a full refund by contacting our support team.</p>
+            <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">2. No Refund Policy</h2>
+            <p>All payments made to SmartFlex are <strong className="text-white">non-refundable</strong>. Since SmartFlex provides digital services that are instantly accessible upon payment, we do not offer refunds on any subscription plans or credit pack purchases once the payment has been processed.</p>
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">3. Non-Refundable Cases</h2>
+            <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">3. Non-Refundable Items</h2>
             <ul className="list-disc list-inside space-y-2 text-gray-400">
-              <li>Refund requests made after 7 days of payment</li>
-              <li>Credits that have already been used</li>
-              <li>Renewal charges (we send reminder emails before renewal)</li>
-              <li>Accounts terminated for violating Terms of Service</li>
+              <li>Monthly or annual Pro subscription fees</li>
+              <li>One-time credit pack purchases</li>
+              <li>Renewal charges</li>
+              <li>Partially used subscription periods</li>
             </ul>
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">4. Credit Pack Refunds</h2>
-            <p>Credit packs (one-time purchases) are non-refundable once any credits have been used. Unused credit packs may be eligible for refund within 7 days of purchase.</p>
+            <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">4. Exceptions</h2>
+            <p>Refunds will only be considered in cases of <strong className="text-white">duplicate payments</strong> or <strong className="text-white">technical errors</strong> caused by SmartFlex that resulted in an incorrect charge. Such claims must be reported within 48 hours of the transaction to <a href="mailto:support@usesmartflex.com" className="text-[#16B6B0] hover:underline">support@usesmartflex.com</a>.</p>
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">5. How to Request a Refund</h2>
-            <p>To request a refund, please email us at <a href="mailto:support@usesmartflex.com" className="text-[#16B6B0] hover:underline">support@usesmartflex.com</a> with your registered email address and transaction details. We process refunds within <strong className="text-white">5-7 business days</strong>.</p>
+            <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">5. Payment Disputes</h2>
+            <p>Before raising a payment dispute or chargeback with your bank, please contact us at <a href="mailto:support@usesmartflex.com" className="text-[#16B6B0] hover:underline">support@usesmartflex.com</a>. Chargebacks filed without prior communication may result in immediate account suspension.</p>
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">6. Payment Disputes</h2>
-            <p>Before raising a payment dispute with your bank, please contact us directly. We are committed to resolving all payment issues promptly and fairly. Chargebacks without prior contact may result in account suspension.</p>
+            <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">6. Contact Us</h2>
+            <p>For billing-related queries, reach us at <a href="mailto:support@usesmartflex.com" className="text-[#16B6B0] hover:underline">support@usesmartflex.com</a>. We aim to respond within 2 business days.</p>
           </div>
         </div>
       </div>
