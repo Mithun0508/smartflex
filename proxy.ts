@@ -1,13 +1,32 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// 🔥 Protected routes
+// 🔒 Protected routes - login mandatory
 const isProtectedRoute = createRouteMatcher([
+  "/dashboard(.*)",
   "/video-upload(.*)",
   "/social-share(.*)",
+  "/account(.*)",
+]);
+
+// 🌐 Always public routes
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/home(.*)",
+  "/pricing(.*)",
+  "/about(.*)",
+  "/contact(.*)",
+  "/faq(.*)",
+  "/feedback(.*)",
+  "/privacy-policy(.*)",
+  "/terms(.*)",
+  "/refund-policy(.*)",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/api/webhooks(.*)",
+  "/api/cloudinary-webhook(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  // Agar protected route hai → login mandatory
   if (isProtectedRoute(req)) {
     await auth.protect();
   }

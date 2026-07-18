@@ -1,41 +1,65 @@
+import Link from "next/link";
+
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-[#000000] border-t border-[#0f1624] py-12 mt-20">
-      <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-10">
+    <footer className="bg-[#050810] border-t border-[#1b2335] py-10 mt-auto">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+          {/* Brand */}
+          <div className="col-span-1">
+            <h3 className="text-white font-bold text-lg font-poppins mb-3">
+              Smart<span className="text-[#16B6B0]">Flex</span>
+            </h3>
+            <p className="text-gray-400 text-sm font-inter leading-relaxed">
+              AI-powered media compression for creators. Compress smarter, not harder.
+            </p>
+          </div>
 
-        {/* Column 1 */}
-        <div>
-          <h3 className="font-poppins text-lg mb-3 text-white">SmartFlex</h3>
-          <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
-            AI-powered media tools for creators. Compress, optimize, and share faster.
+          {/* Tools */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-4 uppercase tracking-wider">Tools</h4>
+            <ul className="space-y-2 text-sm text-gray-400">
+              <li><Link href="/video-upload" className="hover:text-[#16B6B0] transition">Video Compression</Link></li>
+              <li><Link href="/social-share" className="hover:text-[#16B6B0] transition">Social Media Resizer</Link></li>
+              <li><Link href="/pricing" className="hover:text-[#16B6B0] transition">Pricing</Link></li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-4 uppercase tracking-wider">Company</h4>
+            <ul className="space-y-2 text-sm text-gray-400">
+              <li><Link href="/about" className="hover:text-[#16B6B0] transition">About Us</Link></li>
+              <li><Link href="/contact" className="hover:text-[#16B6B0] transition">Contact</Link></li>
+              <li><Link href="/faq" className="hover:text-[#16B6B0] transition">FAQ</Link></li>
+              <li><Link href="/feedback" className="hover:text-[#16B6B0] transition">Feedback</Link></li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-4 uppercase tracking-wider">Legal</h4>
+            <ul className="space-y-2 text-sm text-gray-400">
+              <li><Link href="/privacy-policy" className="hover:text-[#16B6B0] transition">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-[#16B6B0] transition">Terms & Conditions</Link></li>
+              <li><Link href="/refund-policy" className="hover:text-[#16B6B0] transition">Refund Policy</Link></li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="border-t border-[#1b2335] pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-gray-500 text-sm font-inter">
+            © {currentYear} SmartFlex. All rights reserved.
           </p>
+          <div className="flex items-center gap-6 text-xs text-gray-500">
+            <span>Payments secured by <span className="text-white">Razorpay</span></span>
+            <span>•</span>
+            <span>Made with ❤️ in India 🇮🇳</span>
+          </div>
         </div>
-
-        {/* Column 2 */}
-        <div>
-          <h4 className="font-poppins text-md text-white mb-3">Product</h4>
-          <ul className="space-y-2 text-gray-400 text-sm">
-            <li><a href="/video-upload" className="hover:text-[#16B6B0]">Video Compression</a></li>
-            <li><a href="/image-upload" className="hover:text-[#16B6B0]">Image Adjustment</a></li>
-            <li><a href="/pricing" className="hover:text-[#16B6B0]">Pricing</a></li>
-          </ul>
-        </div>
-
-        {/* Column 3 */}
-        <div>
-          <h4 className="font-poppins text-md text-white mb-3">Company</h4>
-          <ul className="space-y-2 text-gray-400 text-sm">
-            <li><a href="/about" className="hover:text-[#16B6B0]">About</a></li>
-            <li><a href="/feedback" className="hover:text-[#16B6B0]">Feedback</a></li>
-            <li><a href="/faq" className="hover:text-[#16B6B0]">FAQ</a></li>
-          </ul>
-        </div>
-
-      </div>
-
-      {/* Bottom */}
-      <div className="text-center text-gray-500 text-xs mt-10">
-        © {new Date().getFullYear()} SmartFlex. All rights reserved.
       </div>
     </footer>
   );
