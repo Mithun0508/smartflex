@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
 
           <div>
             <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">6. Contact Us</h2>
-            <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:support@usesmartflex.com" className="text-[#16B6B0] hover:underline">support@usesmartflex.com</a>.</p>
+            <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:mithunp36@gmail.com" className="text-[#16B6B0] hover:underline">mithunp36@gmail.com</a>.</p>
           </div>
         </div>
       </div>

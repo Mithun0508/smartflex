@@ -38,7 +38,7 @@ export default function TermsPage() {
 
           <div>
             <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">7. Contact</h2>
-            <p>For any questions regarding these terms, contact us at <a href="mailto:support@usesmartflex.com" className="text-[#16B6B0] hover:underline">support@usesmartflex.com</a>.</p>
+            <p>For any questions regarding these terms, contact us at <a href="mailto:mithunp36@gmail.com" className="text-[#16B6B0] hover:underline">mithunp36@gmail.com</a>.</p>
           </div>
         </div>
       </div>

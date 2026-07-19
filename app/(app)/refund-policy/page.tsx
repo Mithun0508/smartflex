@@ -28,17 +28,17 @@ export default function RefundPolicyPage() {
 
           <div>
             <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">4. Exceptions</h2>
-            <p>Refunds will only be considered in cases of <strong className="text-white">duplicate payments</strong> or <strong className="text-white">technical errors</strong> caused by SmartFlex that resulted in an incorrect charge. Such claims must be reported within 48 hours of the transaction to <a href="mailto:support@usesmartflex.com" className="text-[#16B6B0] hover:underline">support@usesmartflex.com</a>.</p>
+            <p>Refunds will only be considered in cases of <strong className="text-white">duplicate payments</strong> or <strong className="text-white">technical errors</strong> caused by SmartFlex that resulted in an incorrect charge. Such claims must be reported within 48 hours of the transaction to <a href="mailto:mithunp36@gmail.com" className="text-[#16B6B0] hover:underline">mithunp36@gmail.com</a>.</p>
           </div>
 
           <div>
             <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">5. Payment Disputes</h2>
-            <p>Before raising a payment dispute or chargeback with your bank, please contact us at <a href="mailto:support@usesmartflex.com" className="text-[#16B6B0] hover:underline">support@usesmartflex.com</a>. Chargebacks filed without prior communication may result in immediate account suspension.</p>
+            <p>Before raising a payment dispute or chargeback with your bank, please contact us at <a href="mailto:mithunp36@gmail.com" className="text-[#16B6B0] hover:underline">mithunp36@gmail.com</a>. Chargebacks filed without prior communication may result in immediate account suspension.</p>
           </div>
 
           <div>
             <h2 className="text-xl font-semibold text-[#16B6B0] mb-3">6. Contact Us</h2>
-            <p>For billing-related queries, reach us at <a href="mailto:support@usesmartflex.com" className="text-[#16B6B0] hover:underline">support@usesmartflex.com</a>. We aim to respond within 2 business days.</p>
+            <p>For billing-related queries, reach us at <a href="mailto:mithunp36@gmail.com" className="text-[#16B6B0] hover:underline">mithunp36@gmail.com</a>. We aim to respond within 2 business days.</p>
           </div>
         </div>
       </div>
