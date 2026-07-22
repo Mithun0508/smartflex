@@ -4,6 +4,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { getOrCreateUser } from "@/lib/user";
 import prisma from "@/utils/prisma";
 import { startOfDay } from "date-fns";
+import { videoUploadLimiter } from "@/lib/rate-limit";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -19,8 +20,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // 🛡️ Rate limit: 10 video uploads per hour per user
+    const rateLimitResult = videoUploadLimiter(userId);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many upload attempts. Please wait an hour before trying again." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
-    const requestedQuality = body.quality || "480p";
+
+    // 🛡️ Validate quality input
+    const allowedQualities = ["480p", "720p"];
+    const requestedQuality = allowedQualities.includes(body.quality) ? body.quality : "480p";
 
     // Get user from DB
     const clerkUser = await currentUser();
