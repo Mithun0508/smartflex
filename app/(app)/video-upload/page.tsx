@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
-import axios from "axios"; // Fetch ki jagah axios use karna better hai headers control ke liye
+import { useRef, useState, useEffect } from "react";
+import axios from "axios";
+import Link from "next/link";
 
 function bytesToMB(bytes: number) {
   return (bytes / (1024 * 1024)).toFixed(2);
@@ -12,12 +13,33 @@ export default function VideoUploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [quality, setQuality] = useState("480p");
   const [format, setFormat] = useState("mp4");
-
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState<string | null>(null);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
+  // User plan info from server
+  const [isPro, setIsPro] = useState(false);
+  const [credits, setCredits] = useState(0);
+  const [planLoaded, setPlanLoaded] = useState(false);
+
+  // Fetch user plan on mount
+  useEffect(() => {
+    fetch("/api/user/status")
+      .then((r) => r.json())
+      .then((data) => {
+        setIsPro(data.isPro || false);
+        setCredits(data.credits || 0);
+        setPlanLoaded(true);
+        // Set default quality based on plan
+        if (data.isPro) setQuality("720p");
+        else setQuality("480p");
+      })
+      .catch(() => setPlanLoaded(true));
+  }, []);
+
+  const canUse720p = isPro || credits > 0;
 
   const triggerPicker = () => inputRef.current?.click();
 
@@ -44,7 +66,6 @@ export default function VideoUploadPage() {
   const processVideo = async () => {
     if (!file) return;
 
-    // 🔥 100MB limit
     if (file.size > 100 * 1024 * 1024) {
       setError("Maximum upload size is 100MB");
       setStatus("error");
@@ -55,13 +76,12 @@ export default function VideoUploadPage() {
     setError(null);
 
     try {
-      // 1️⃣ Backend se signature lena (ab hum selected quality bhi bhejenge)
+      // Step 1: Get signature from backend (sends quality, backend decides final quality)
       const signRes = await axios.post("/api/video-upload", { quality });
       const signData = signRes.data;
 
-      // 2️⃣ Cloudinary upload payload (signed params add karna zaroori hai)
+      // Step 2: Upload to Cloudinary
       const formData = new FormData();
-
       formData.append("file", file);
       formData.append("api_key", signData.apiKey);
       formData.append("timestamp", signData.timestamp.toString());
@@ -71,35 +91,27 @@ export default function VideoUploadPage() {
       formData.append("eager_notification_url", signData.eagerNotificationUrl);
       formData.append("folder", signData.folder);
 
-      // 3️⃣ Upload to Cloudinary
       const uploadRes = await axios.post(
         `https://api.cloudinary.com/v1_1/${signData.cloudName}/video/upload`,
         formData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
           transformRequest: [(data, headers) => {
             delete headers["Authorization"];
             return data;
           }],
           onUploadProgress: (progressEvent) => {
             const total = progressEvent.total || file.size;
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / total);
-            setUploadProgress(percentCompleted);
+            const pct = Math.round((progressEvent.loaded * 100) / total);
+            setUploadProgress(pct);
           },
         }
       );
 
-      // 4️⃣ Upload success data
       const data = uploadRes.data;
+      const finalUrl = data.eager?.[0]?.secure_url || data.secure_url;
 
-      // Note: Cloudinary return syntax may vary. Eager might be processing in background, so we check status from DB later.
-      // Initially, secure_url will be the original, but finalUrl can fallback or poll.
-      const finalUrl =
-        data.eager?.[0]?.secure_url || data.secure_url;
-
-      // 🔥 Save video details to database
+      // Step 3: Save to DB
       await axios.post("/api/save-video", {
         publicId: data.public_id,
         title: file.name,
@@ -110,7 +122,11 @@ export default function VideoUploadPage() {
         originalSize: file.size,
       });
 
-      // 5️⃣ UI update
+      // Update local credit count if 720p was used by non-pro
+      if (!isPro && quality === "720p" && credits > 0) {
+        setCredits((c) => Math.max(0, c - 1));
+      }
+
       setUploadProgress(null);
       setOutputUrl(finalUrl);
       setCompressedSize(data.eager?.[0]?.bytes || null);
@@ -118,35 +134,15 @@ export default function VideoUploadPage() {
 
     } catch (err: any) {
       setUploadProgress(null);
-      console.error("🔥 Upload Error FULL:", err);
-
-      console.log(
-        "🔥 RESPONSE DATA:",
-        err.response?.data
-      );
-
-      console.log(
-        "🔥 STATUS:",
-        err.response?.status
-      );
-
       const errorMsg =
         err.response?.data?.error?.message ||
         err.response?.data?.error ||
         err.message ||
         "Something went wrong";
-
-      setError(
-        typeof errorMsg === "string"
-          ? errorMsg
-          : JSON.stringify(errorMsg)
-      );
-
+      setError(typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg));
       setStatus("error");
     }
   };
-
-  // ... (Baaki saara UI code wahi rahega jo aapne diya tha)
 
   const downloadOutput = () => {
     if (!outputUrl) return;
@@ -158,7 +154,6 @@ export default function VideoUploadPage() {
 
   const originalMB = file ? bytesToMB(file.size) : null;
   const compressedMB = compressedSize ? bytesToMB(compressedSize) : null;
-
   const reduction =
     file && compressedSize
       ? `${Math.max(0, Math.round((1 - compressedSize / file.size) * 100))}%`
@@ -166,16 +161,27 @@ export default function VideoUploadPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 space-y-10">
-      {/* Aapka UI code yahan se continue hoga... */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold font-poppins">Video Compression</h1>
-        <span className="px-4 py-1 text-sm rounded-full bg-[#0F1624] border border-[#1b2335]">
-          SmartFlex
-        </span>
+        <div className="flex items-center gap-3">
+          {planLoaded && (
+            <span className={`px-3 py-1 text-xs font-bold rounded-full ${
+              isPro
+                ? "bg-[#16B6B0]/20 text-[#16B6B0] border border-[#16B6B0]/40"
+                : "bg-gray-800 text-gray-400 border border-gray-700"
+            }`}>
+              {isPro ? "PRO 👑" : `FREE · ${credits} credits`}
+            </span>
+          )}
+          <span className="px-4 py-1 text-sm rounded-full bg-[#0F1624] border border-[#1b2335]">
+            SmartFlex
+          </span>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-10">
         <div className="space-y-8">
+          {/* Step 1 */}
           <div className="bg-[#0F1624] p-6 rounded-2xl border border-[#1b2335] shadow-xl space-y-4">
             <h2 className="text-xl font-semibold font-poppins">Step 1 — Choose Video</h2>
             <input ref={inputRef} type="file" accept="video/*" hidden onChange={onFileChange} />
@@ -195,44 +201,76 @@ export default function VideoUploadPage() {
             )}
           </div>
 
+          {/* Step 2 */}
           <div className="bg-[#0F1624] p-6 rounded-2xl border border-[#1b2335] shadow-xl space-y-5">
             <h2 className="text-xl font-semibold font-poppins">Step 2 — Options</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm mb-1 text-gray-300">Quality</label>
-                <select value={quality} onChange={(e) => setQuality(e.target.value)} className="w-full bg-[#05070D] border border-[#1b2335] text-gray-200 rounded-lg px-3 py-2">
+                <select
+                  value={quality}
+                  onChange={(e) => setQuality(e.target.value)}
+                  className="w-full bg-[#05070D] border border-[#1b2335] text-gray-200 rounded-lg px-3 py-2"
+                >
                   <option value="480p">480p (Free)</option>
-                  <option value="720p">720p (Pro)</option>
+                  <option value="720p" disabled={!canUse720p}>
+                    720p (Pro){!canUse720p ? " 🔒" : ""}
+                  </option>
                 </select>
+
+                {/* Info messages */}
                 {quality === "480p" && (
                   <p className="text-[11px] text-gray-400 mt-1 font-inter">
                     ℹ️ Watermarked with <strong>smartflex.com</strong>
                   </p>
                 )}
-                {quality === "720p" && (
+                {quality === "720p" && isPro && (
                   <p className="text-[11px] text-[#16B6B0] mt-1 font-inter font-medium">
-                    ✨ No watermark, High Definition
+                    ✨ No watermark, High Definition (Pro)
                   </p>
                 )}
+                {quality === "720p" && !isPro && credits > 0 && (
+                  <p className="text-[11px] text-yellow-400 mt-1 font-inter font-medium">
+                    ⚡ 1 credit will be used · {credits} remaining
+                  </p>
+                )}
+
+                {/* Upgrade prompt for locked 720p */}
+                {!canUse720p && planLoaded && (
+                  <Link href="/pricing" className="block mt-2 text-[11px] text-[#16B6B0] hover:underline font-inter">
+                    🔒 Upgrade to Pro for 720p HD →
+                  </Link>
+                )}
               </div>
+
               <div>
                 <label className="block text-sm mb-1 text-gray-300">Format</label>
-                <select value={format} onChange={(e) => setFormat(e.target.value)} className="w-full bg-[#05070D] border border-[#1b2335] text-gray-200 rounded-lg px-3 py-2">
+                <select
+                  value={format}
+                  onChange={(e) => setFormat(e.target.value)}
+                  className="w-full bg-[#05070D] border border-[#1b2335] text-gray-200 rounded-lg px-3 py-2"
+                >
                   <option value="mp4">MP4</option>
                   <option value="webm">WebM</option>
                 </select>
               </div>
             </div>
-            <button onClick={processVideo} disabled={!file || status === "processing"} className="px-6 py-2 bg-[#16B6B0] text-black rounded-lg font-semibold transition hover:opacity-90 disabled:opacity-40">
+
+            <button
+              onClick={processVideo}
+              disabled={!file || status === "processing"}
+              className="px-6 py-2 bg-[#16B6B0] text-black rounded-lg font-semibold transition hover:opacity-90 disabled:opacity-40"
+            >
               {status === "processing" ? "Processing…" : "Compress Video"}
             </button>
             <p className="text-yellow-400 text-xs mt-2 text-center font-inter">
-              ⚠️ Don’t leave this page during processing. Leaving may cancel the operation.
+              ⚠️ Don't leave this page during processing. Leaving may cancel the operation.
             </p>
             {status === "error" && error && <p className="text-red-400 text-sm">Error: {error}</p>}
           </div>
         </div>
 
+        {/* Step 3 - Result */}
         <div className="bg-[#0F1624] p-6 rounded-2xl border border-[#1b2335] shadow-xl">
           <h2 className="text-xl font-semibold font-poppins mb-4">Step 3 — Result</h2>
           {status === "idle" && <p className="text-gray-400 text-sm font-inter">Select a video to get started.</p>}
@@ -247,7 +285,6 @@ export default function VideoUploadPage() {
                       : "Cloudinary is compressing video..."}
                   </p>
                 </div>
-                {/* Visual Progress Bar */}
                 {uploadProgress !== null && (
                   <div className="w-full bg-[#05070D] h-2 rounded-full overflow-hidden border border-[#1b2335]">
                     <div
@@ -257,13 +294,12 @@ export default function VideoUploadPage() {
                   </div>
                 )}
               </div>
-              
-              {/* Ad Placeholder during wait time */}
+              {/* Ad Placeholder */}
               <div className="p-4 bg-[#05070D] border border-dashed border-[#1b2335] rounded-xl text-center space-y-2 mt-4">
                 <span className="text-[10px] text-gray-500 block uppercase tracking-wider font-semibold font-inter">Sponsored Ad</span>
                 <div className="h-40 bg-[#0F1624]/60 rounded-lg flex flex-col items-center justify-center border border-[#1b2335] p-4 text-center">
-                  <p className="text-xs text-[#16B6B0] font-semibold mb-1 uppercase">Stripe / AdSense Placement</p>
-                  <p className="text-[11px] text-gray-400 max-w-xs font-inter">This space displays banner ads for Free users to help maintain free video compression services.</p>
+                  <p className="text-xs text-[#16B6B0] font-semibold mb-1 uppercase">AdSense Placement</p>
+                  <p className="text-[11px] text-gray-400 max-w-xs font-inter">This space displays ads for Free users to help maintain free compression services.</p>
                 </div>
               </div>
             </div>
