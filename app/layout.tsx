@@ -2,6 +2,7 @@ import "./globals.css";
 import NavbarClient from "@/app/components/NavbarClient";
 import Footer from "@/app/components/Footer";
 import Providers from "./providers";
+import Script from "next/script";
 export const dynamic = "force-dynamic";
 
 
@@ -69,10 +70,26 @@ export default function RootLayout({
       </head>
 
       <body className="min-h-screen flex flex-col bg-[#070B14] text-white font-inter">
+
+        {/* ── Google Analytics ── */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-MYZJ3EYVVN"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-MYZJ3EYVVN', {
+              page_path: window.location.pathname,
+            });
+          `}
+        </Script>
+
         <Providers>
           {/* Navbar */}
           <NavbarClient />
-
 
           {/* Page Content */}
           <main className="flex-1 pt-24">{children}</main>
@@ -81,7 +98,6 @@ export default function RootLayout({
           <Footer />
         </Providers>
 
-        
       </body>
     </html>
   );
