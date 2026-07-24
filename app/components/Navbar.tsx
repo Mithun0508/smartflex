@@ -20,7 +20,7 @@ export default function Navbar() {
     { name: "Feedback", href: "/feedback" },
     { name: "About", href: "/about" },
     { name: "FAQ", href: "/faq" },
-    { name: "Dashbord", href: "/dashboard" },
+    { name: "Dashboard", href: "/dashboard" },
   ];
 
   const isActive = (href: string) => pathname === href;
